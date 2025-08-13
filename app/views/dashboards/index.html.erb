@@ -1,0 +1,81 @@
+<!-- app/views/dashboards/index.html.erb -->
+<div class="container py-4">
+  <h2 class="mb-4">Dashboard</h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <%= form_with url: dashboards_upload_path, method: :post, multipart: true, local: true do %>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Planilha de Pedidos (.xlsx/.xls/.csv)</label>
+            <%= file_field_tag :orders_file, class: "form-control", required: true %>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Planilha de Faturas (.xlsx/.xls/.csv)</label>
+            <%= file_field_tag :invoices_file, class: "form-control", required: true %>
+          </div>
+        </div>
+        <div class="mt-3">
+          <%= submit_tag "Processar", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @summary.present? %>
+    <div class="row g-3 mb-4">
+      <div class="col-md-3"><div class="card text-center"><div class="card-body">
+        <div class="h6 text-muted">Total de pedidos</div>
+        <div class="h3"><%= @summary[:total_pedidos] %></div>
+      </div></div></div>
+
+      <div class="col-md-3"><div class="card text-center"><div class="card-body">
+        <div class="h6 text-muted">Valor faturado</div>
+        <div class="h3">R$ <%= number_with_precision(@summary[:valor_faturado], precision: 2, delimiter: ".", separator: ",") %></div>
+      </div></div></div>
+
+      <div class="col-md-3"><div class="card text-center"><div class="card-body">
+        <div class="h6 text-muted">Pedidos pendentes</div>
+        <div class="h3 text-warning"><%= @summary[:pedidos_pendentes] %></div>
+      </div></div></div>
+
+      <div class="col-md-3"><div class="card text-center"><div class="card-body">
+        <div class="h6 text-muted">Valor pendente</div>
+        <div class="h3 text-danger">R$ <%= number_with_precision(@summary[:valor_pendente], precision: 2, delimiter: ".", separator: ",") %></div>
+      </div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-body table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Número do pedido</th>
+              <th>Plataforma</th>
+              <th class="text-end">Valor</th>
+              <th class="text-center">Dias vencidos</th>
+              <th>Status</th>
+              <th class="text-end">Recebido</th>
+              <th class="text-end">Pendente</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @rows.each do |r| %>
+              <tr class="<%= 'table-warning' if r['pendente'] %>">
+                <td><%= r['numero_pedido'] %></td>
+                <td><%= r['plataforma'] %></td>
+                <td class="text-end">R$ <%= number_with_precision(r['valor'], precision: 2, delimiter: ".", separator: ",") %></td>
+                <td class="text-center"><%= r['dias_vencidos'] %></td>
+                <td><%= r['status'] %></td>
+                <td class="text-end">R$ <%= number_with_precision(r['valor_recebido'], precision: 2, delimiter: ".", separator: ",") %></td>
+                <td class="text-end fw-semibold">R$ <%= number_with_precision(r['valor_pendente'], precision: 2, delimiter: ".", separator: ",") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% else %>
+    <div class="alert alert-info">Envie as duas planilhas para ver os resultados.</div>
+  <% end %>
+</div>
