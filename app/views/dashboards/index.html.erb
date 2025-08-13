@@ -1,4 +1,31 @@
-<!-- app/views/dashboards/index.html.erb -->
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid d-flex justify-content-between align-items-center w-100 m-3">
+
+    <a class="navbar-brand" href="/">Resumo livre</a>
+
+
+    <ul class="navbar-nav d-flex flex-row gap-3 ms-auto">
+      <% if user_signed_in? %>
+        <li class="nav-item">
+          <span class="nav-link text-white">Olá, <%= current_user.email %></span>
+        </li>
+        <li class="nav-item">
+          <%= link_to "Minha Conta", edit_user_registration_path, class: "nav-link text-white" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "Log out", destroy_user_session_path, data: {turbo_method: :delete}, class: "nav-link text-white" %>
+        </li>
+      <% else %>
+        <li class="nav-item">
+          <%= link_to "Entrar", new_user_session_path, class: "nav-link text-white" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "Criar Conta", new_user_registration_path, class: "nav-link text-white" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</nav>
 <div class="container py-4">
   <h2 class="mb-4">Dashboard</h2>
 
@@ -7,7 +34,7 @@
       <%= form_with url: dashboards_upload_path,
               method: :post,
               multipart: true,
-              data: { turbo: false }, # ESSENCIAL para upload sem Turbo
+              data: { turbo: false },
               local: true do %>
       <div class="row g-3">
         <div class="col-md-6">
