@@ -25,32 +25,42 @@ class SpreadsheetParser
 
   def self.normalize_orders(xlsx)
     sheet = xlsx.sheet(0)
-    headers = sheet.row(1).map(&:to_s)
-    rows = (2..sheet.last_row).map { |i| sheet.row(i) }.map { |r| headers.zip(r).to_h }
+
+    header_row_index = 2
+    headers = sheet.row(header_row_index).map(&:to_s)
+
+    rows = (header_row_index + 1..sheet.last_row).map { |i| sheet.row(i) }
+    data = rows.map { |r| headers.zip(r).to_h }
 
     {
-      rows: rows,
-      number_key: find_key(headers, "número do pedido", "numero do pedido", "pedido"),
-      status_key: find_key(headers, "status do pedido", "status"),
-      price_key:  find_key(headers, "preço do produto", "preco do produto", "valor", "preço", "preco"),
-      coupon_key: find_key(headers, "valor do cupom", "cupom"),
-      created_at_key: find_key(headers, "data e hora de criação do pedido", "data", "criação")
+      rows: data,
+      number_key:    find_key(headers, "número do pedido", "numero do pedido", "pedido", "order number"),
+      status_key:    find_key(headers, "status do pedido", "status"),
+      price_key:     find_key(headers, "preço do produto", "preco do produto", "valor", "preço", "preco", "total"),
+      coupon_key:    find_key(headers, "valor do cupom", "cupom", "desconto"),
+      created_at_key: find_key(headers, "data e hora de criação do pedido", "data do pedido", "data de criação", "criação")
     }
   end
+
 
   def self.normalize_invoices(xlsx)
     sheet = xlsx.sheet(0)
-    headers = sheet.row(2).map(&:to_s)            # cabeçalho na linha 2
-    rows    = (3..sheet.last_row).map { |i| sheet.row(i) }.map { |r| headers.zip(r).to_h }
+
+    header_row_index = 2
+    headers = sheet.row(header_row_index).map(&:to_s)
+
+    rows = (header_row_index + 1..sheet.last_row).map { |i| sheet.row(i) }
+    data = rows.map { |r| headers.zip(r).to_h }
 
     {
-      rows: rows,
-      number_key: find_key(headers, "número do pedido", "numero do pedido", "pedido"),
-      site_key:   find_key(headers, "site", "plataforma"),
-      paid_at_key: find_key(headers, "data de pagamento"),
-      received_key: find_key(headers, "valor a receber", "valor", "total", "preço", "preco")
+      rows: data,
+      number_key:  find_key(headers, "número do pedido", "numero do pedido", "pedido", "order number"),
+      site_key:    find_key(headers, "site", "plataforma", "canal", "marketplace"),
+      paid_at_key: find_key(headers, "data de pagamento", "data pagamento", "payment date"),
+      received_key: find_key(headers, "valor a receber", "valor", "total", "recebido", "amount", "payout")
     }
   end
+
 
   def self.find_key(headers, *candidates)
     downcased = headers.map { |h| [h.downcase, h] }.to_h

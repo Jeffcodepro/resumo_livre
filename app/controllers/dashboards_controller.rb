@@ -3,6 +3,8 @@ class DashboardsController < ApplicationController
 
   def index
     # apenas renderiza a tela com cards zerados e formulário de upload
+    @summary ||= { total_pedidos: 0, valor_faturado: 0, pedidos_pendentes: 0, valor_pendente: 0 }
+    @rows    ||= []
   end
 
   def upload
