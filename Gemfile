@@ -53,6 +53,8 @@ gem "devise"
 gem "roo", "~> 2.10"
 gem 'caxlsx'
 
+gem "mini_racer", platforms: :ruby
+
 group :development, :test do
   gem "dotenv-rails"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
