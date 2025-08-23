@@ -1,0 +1,230 @@
+/* garante que o collapse seja visível quando aberto */
+.navbar-neon .navbar-collapse.collapse.show {
+  display: block;
+}
+
+/* estilinho do painel mobile */
+.neon-collapse {
+  border-top: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,0.03) inset,
+    0 10px 26px rgba(0,0,0,0.35);
+}
+
+
+/* Logo + neon hover (o seu) */
+.brand-link { position: relative; display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; will-change: filter, transform; }
+.brand-logo { height: 28px; width: auto; display: block; transition: transform .18s ease, filter .25s ease; filter: drop-shadow(0 2px 8px rgba(255,122,26,.22)); }
+.brand-text { color: var(--text-100); font-weight: 700; letter-spacing: .2px; line-height: 1; transition: color .18s ease, text-shadow .25s ease; display: none; }
+
+@media (min-width: 576px) { .brand-logo { height: 30px; } .brand-text { display: inline-block; } }
+@media (min-width: 992px) { .brand-logo { height: 32px; } }
+
+.navbar-neon .brand-link:hover .brand-logo,
+.navbar-neon .brand-link:focus-visible .brand-logo {
+  transform: translateY(-1px) scale(1.02);
+  filter:
+    drop-shadow(0 0 6px rgba(255,122,26,.55))
+    drop-shadow(0 0 16px rgba(255,122,26,.45))
+    drop-shadow(0 0 32px rgba(255,122,26,.35));
+  animation: neonPulse 1.6s ease-in-out infinite;
+}
+
+.navbar-neon .brand-link:hover .brand-text,
+.navbar-neon .brand-link:focus-visible .brand-text {
+  color: var(--primary);
+  text-shadow: 0 0 6px rgba(255,122,26,.55), 0 0 18px rgba(255,122,26,.35);
+}
+
+@keyframes neonPulse {
+  0%   { filter: drop-shadow(0 0 10px rgba(255,122,26,.45)) drop-shadow(0 0 24px rgba(255,122,26,.30)); }
+  50%  { filter: drop-shadow(0 0 14px rgba(255,122,26,.60)) drop-shadow(0 0 36px rgba(255,122,26,.42)); }
+  100% { filter: drop-shadow(0 0 10px rgba(255,122,26,.45)) drop-shadow(0 0 24px rgba(255,122,26,.30)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar-neon .brand-link:hover .brand-logo,
+  .navbar-neon .brand-link:focus-visible .brand-logo {
+    animation: none;
+  }
+}
+
+/* ====== Navbar inline (sem colapso) ====== */
+.navbar-neon .nav-inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex-wrap: wrap;               /* permite cair para 2ª linha quando apertar */
+  justify-content: flex-end;
+}
+
+.navbar-neon .nav-link-compact {
+  padding: .35rem .7rem;         /* mais compacto para caber no mobile */
+  border-radius: 999px;
+  line-height: 1.1;
+}
+
+/* Saudação com reticências se ficar longa no mobile */
+.navbar-neon .hello {
+  max-width: 40vw;               /* limite visual no mobile */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+/* Ajustes finos por breakpoint */
+@media (max-width: 575.98px) {
+  .navbar-neon .nav-inline { gap: .35rem; }
+  .navbar-neon .nav-link-compact { padding: .28rem .6rem; font-size: .92rem; }
+  .brand-logo { height: 26px; }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .navbar-neon .nav-link-compact { padding: .32rem .65rem; }
+}
+
+/* Mantém o visual neon já existente */
+.navbar-neon .nav-link-compact:hover {
+  color: #0B0B0B !important;
+  background: linear-gradient(135deg, var(--primary), var(--primary-600));
+  box-shadow: 0 6px 18px rgba(255,122,26,.25);
+}
+
+/* ====== Platform Bar (segunda navbar) ====== */
+.platform-bar {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.03) inset,
+    0 8px 22px rgba(0,0,0,0.45);
+}
+
+.platform-list {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 8px;
+  margin: 0;
+  list-style: none;
+}
+
+/* remove barra de scroll visível (Safari/Chrome) */
+.platform-list::-webkit-scrollbar { display: none; }
+
+.platform-item { flex: 0 0 auto; }
+
+.platform-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease, filter .2s ease, opacity .2s ease;
+}
+
+.platform-logo {
+  height: 22px;
+  width: auto;
+  display: block;
+}
+
+/* Nome opcional ao lado do ícone (mostra do sm pra cima) */
+.platform-name {
+  color: var(--text-200);
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+/* Estado ativo (SHEIN) */
+.platform-link.active {
+  border-color: rgba(255,122,26,.30);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.22) inset,
+    0 10px 24px rgba(255,122,26,.18);
+}
+.platform-link.active:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.30) inset,
+    0 14px 36px rgba(255,122,26,.24);
+}
+
+/* Desabilitadas (em desenvolvimento) — cinza */
+.platform-link.is-disabled {
+  filter: grayscale(1) opacity(.55);
+  cursor: not-allowed;
+  position: relative; /* necessário pro tooltip */
+}
+
+/* Tooltip CSS-only usando data-tooltip */
+.platform-link.is-disabled[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  background: rgba(15,15,15,.95);
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 8px 22px rgba(0,0,0,.45);
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+.platform-link.is-disabled[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(15,15,15,.95);
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+
+.platform-link.is-disabled:hover::after,
+.platform-link.is-disabled:hover::before {
+  opacity: 1;
+}
+
+.platform-bar .platform-container {
+  display: flex;
+  justify-content: center;   /* centraliza o conteúdo dentro da barra */
+}
+
+/* A lista vira um bloco com largura do conteúdo e centraliza */
+.platform-list {
+  display: inline-flex;      /* importante para centralizar com margin:auto */
+  margin: 0 auto;            /* centraliza quando couber na tela */
+  justify-content: center;   /* alinha itens ao centro */
+}
+
+
+/* Responsividade: deixa os ícones um pouco maiores a partir do sm */
+@media (min-width: 576px) {
+  .platform-logo { height: 24px; }
+}
+
+/* A partir de md, um pouco mais de respiro */
+@media (min-width: 768px) {
+  .platform-list { gap: 22px; padding: 12px 10px; }
+  .platform-logo { height: 26px; }
+}

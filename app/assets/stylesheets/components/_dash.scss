@@ -1,0 +1,384 @@
+/* =========================
+   DASHBOARD – NEON ORANGE
+   ========================= */
+
+/* Variáveis (reusa as que já criamos para o auth) */
+:root {
+  --primary:           #FF7A1A; /* neon base */
+  --primary-600:       #FF6A00; /* hover */
+  --primary-700:       #E75C00; /* active */
+  --primary-100:       rgba(255, 122, 26, 0.16);
+
+  --text-100: #F3F4F6;
+  --text-200: #E5E7EB;
+  --text-400: #9CA3AF;
+  --text-500: #6B7280;
+
+  --line:         rgba(255,255,255,0.14);
+  --glass:        rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+
+  --error:     #DD1E73;
+  --error-200: #FF84BE;
+  --warn:      #F59E0B;
+  --ok:        #10B981;
+
+  --shadow-soft:  0 12px 30px rgba(0,0,0,0.55);
+  --shadow-hover: 0 16px 42px rgba(0,0,0,0.65);
+}
+
+/* Fundo da página (opcional, caso não esteja usando auth-bg aqui) */
+.page-bg {
+  min-height: 100vh;
+  background-color: #000;
+  background-image:
+    radial-gradient(700px 320px at 12% -6%, rgba(255,122,26,0.14), transparent 60%),
+    radial-gradient(560px 260px at 92% 0%,   rgba(255,106,0,0.12), transparent 60%),
+    linear-gradient(160deg, #0A0A0A 0%, #0F0F0F 35%, #111 60%, #0B0B0B 100%);
+}
+
+/* ========================= Navbar ========================= */
+.navbar-neon {
+  background: linear-gradient(180deg, rgba(10,10,10,0.85), rgba(10,10,10,0.65));
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.03) inset,
+    0 6px 18px rgba(0,0,0,0.6);
+}
+
+.navbar-neon .navbar-brand {
+  color: var(--text-100);
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.navbar-neon .navbar-brand:hover { color: var(--primary); }
+
+.navbar-neon .nav-link {
+  color: var(--text-200) !important;
+  border-radius: 999px;
+  padding: .4rem .8rem;
+  transition: all .15s ease;
+}
+.navbar-neon .nav-link:hover {
+  color: #0B0B0B !important;
+  background: linear-gradient(135deg, var(--primary), var(--primary-600));
+  box-shadow: 0 6px 18px rgba(255,122,26,.25);
+}
+
+/* ========================= Cards & KPI ========================= */
+.card.neon-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid var(--glass-border);
+  color: var(--text-200);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02) inset,
+    var(--shadow-soft);
+}
+
+.card.neon-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.kpi-card .h6 { color: var(--text-400); }
+.kpi-card .h3 {
+  color: var(--text-100);
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.kpi-card .h3.text-warning { color: var(--warn) !important; }
+.kpi-card .h3.text-danger  { color: #f87171 !important; }
+
+/* ========================= Botões ========================= */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-600));
+  border: none;
+  color: #0B0B0B;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.25) inset,
+    0 10px 26px rgba(255,122,26,.22);
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.btn-primary:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.30) inset,
+    0 14px 34px rgba(255,122,26,.28);
+}
+
+/* ========================= Formulário Upload ========================= */
+.form-label { color: var(--text-400); }
+.form-control {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--line);
+  color: var(--text-100);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+}
+.form-control:focus {
+  background: rgba(255,255,255,0.10);
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 0.2rem rgba(255,122,26, .22),
+    0 0 18px rgba(255,122,26, .22);
+  outline: none;
+}
+
+/* ========================= Tabela ========================= */
+.table-neon {
+  color: var(--text-200);
+  border-color: var(--glass-border);
+}
+.table-neon thead th {
+  color: var(--text-100);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.table-neon tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: background .15s ease, box-shadow .15s ease;
+}
+.table-neon tbody tr:hover {
+  background: rgba(255,255,255,0.04);
+  box-shadow: 0 0 0 1px rgba(255,122,26,0.10) inset;
+}
+
+.table-neon .text-end { color: var(--text-100); }
+
+/* Linha “pendente” com brilho âmbar */
+.table-neon tr.table-warning,
+.table-neon tr.table-warning > * {
+  background-color: rgba(245, 158, 11, 0.10) !important; /* amber */
+  color: #ffd7a1 !important;
+}
+.table-neon tr.table-warning {
+  box-shadow:
+    0 0 0 1px rgba(245, 158, 11, 0.18) inset,
+    0 0 18px rgba(245,158,11,0.18);
+}
+
+/* “Status” em badges (opcional, caso você troque texto por spans) */
+.badge-status {
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-200);
+  padding: .35rem .6rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.badge-status.ok    { color: #84F3C1; border-color: rgba(16,185,129,.35); }
+.badge-status.warn  { color: #FFD391; border-color: rgba(245,158,11,.35); }
+.badge-status.error { color: var(--error-200); border-color: rgba(221,30,115,.35); }
+
+/* ========================= Headings ========================= */
+h2 { color: var(--text-100); }
+
+/* ========================= Utilidades ========================= */
+.text-muted { color: var(--text-400) !important; }
+.text-warning { color: var(--warn) !important; }
+.text-danger  { color: #f87171 !important; }
+
+/* ==== Upload Tiles ==== */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden; clip: rect(1px,1px,1px,1px);
+  white-space: nowrap;
+}
+
+.upload-card { width: 100%; }
+
+.upload-tile {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 18px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  user-select: none;
+  border: 1px dashed rgba(255,255,255,0.18);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03) inset,
+    var(--shadow-soft);
+  color: var(--text-200);
+  transition: box-shadow .2s ease, transform .15s ease, border-color .2s ease;
+
+  /* >>> NOVO: tamanho fixo do tile (evita crescer com nomes longos) */
+  height: 120px;              /* ajuste se quiser 110–140px */
+}
+
+/* Estado hover/drag */
+.upload-tile:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,122,26,0.35);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.28) inset,
+    0 16px 36px rgba(255,122,26,.18);
+}
+.upload-tile.dragover {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.4) inset,
+    0 0 28px rgba(255,122,26,.28);
+}
+
+.upload-tile .icon {
+  display: grid;
+  place-items: center;
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-600));
+  color: #0B0B0B;
+  box-shadow: 0 10px 24px rgba(255,122,26,.22);
+  flex: 0 0 56px;
+}
+
+.upload-tile .icon img.icon-img {
+  width: 28px;
+  height: 28px;
+  display: block;
+  /* Se o SVG estiver escuro e você quiser branco, descomente a linha abaixo */
+  /* filter: brightness(0) invert(1); */
+}
+
+/* >>> NOVO: permite o bloco de textos encolher para o ellipsis funcionar */
+.upload-tile .texts {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;               /* ESSENCIAL p/ ellipsis */
+}
+
+.upload-tile .title {
+  font-weight: 700;
+  color: var(--text-100);
+}
+.upload-tile .hint {
+  color: var(--text-400);
+  font-size: .92rem;
+}
+
+/* >>> NOVO: corta nome grande com reticências sem estourar largura */
+.upload-tile .filename {
+  color: var(--text-200);
+  font-size: .9rem;
+  opacity: .9;
+
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;    /* … */
+  /* se quiser limitar ainda mais, troque por: max-width: 26ch; */
+}
+
+/* Quando já tem arquivo, deixa um glow sutil */
+.upload-tile.has-file {
+  border-style: solid;
+  border-color: rgba(16,185,129,.35);
+  box-shadow:
+    0 0 0 1px rgba(16,185,129,.28) inset,
+    0 14px 32px rgba(16,185,129,.12);
+}
+
+.auth-card-light .form-control:disabled,
+.auth-card-light .soft-input:disabled {
+  color: var(--text-500) !important;            /* texto cinza */
+  -webkit-text-fill-color: var(--text-500);     /* Safari */
+  background: rgba(255,255,255,0.05) !important;/* fundo levemente mais escuro */
+  border-color: rgba(255,255,255,0.12) !important;
+  opacity: 1 !important;                        /* remove “esbranquiçado” padrão */
+  cursor: not-allowed;
+}
+
+/* (Opcional) Altura um pouco menor em telas estreitas */
+@media (max-width: 480px) {
+  .upload-tile {
+    height: 108px;
+    padding: 16px 14px;
+  }
+}
+
+/* === Tabela empilhada para mobile === */
+@media (max-width: 768px) {
+  .table-stacked thead {
+    display: none; /* esconde cabeçalho no mobile */
+  }
+
+  .table-stacked,
+  .table-stacked tbody,
+  .table-stacked tr,
+  .table-stacked td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-stacked tbody {
+    border: 0;
+  }
+
+  .table-stacked tr {
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    box-shadow: var(--shadow-soft);
+  }
+
+  .table-stacked td {
+    /* linha “label | valor” */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+  }
+
+  .table-stacked td:last-child {
+    border-bottom: 0;
+  }
+
+  .table-stacked td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--text-400);
+    font-weight: 600;
+    margin-right: 12px;
+  }
+
+  /* garante alinhamentos agradáveis no mobile */
+  .table-stacked td.text-end { justify-content: space-between; text-align: right; }
+  .table-stacked td.text-center { justify-content: space-between; text-align: right; }
+
+  /* estado de aviso mantém o glow */
+  .table-stacked tr.table-warning {
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.18) inset,
+      0 0 18px rgba(245,158,11,0.18);
+  }
+
+  /* linha vazia (mensagem) como bloco simples */
+  .table-stacked tr.empty-row {
+    padding: 10px 12px;
+  }
+  .table-stacked tr.empty-row td {
+    display: block;
+    border: 0;
+    padding: 0;
+  }
+}

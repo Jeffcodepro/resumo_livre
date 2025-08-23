@@ -1,0 +1,98 @@
+<!-- app/views/devise/registrations/edit.html.erb -->
+<div class="auth-light">
+  <div class="container">
+    <div class="row min-vh-100 align-items-center justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+        <div class="card auth-card-light border-0 shadow-sm rounded-4 p-4 p-md-5">
+
+          <div class="text-center mb-4">
+            <h1 class="h4 mb-1 fw-semibold">Minha conta</h1>
+            <p class="text-secondary m-0">Atualize seus dados</p>
+          </div>
+
+          <% if resource.errors.any? %>
+            <div class="alert alert-danger mb-4">
+              <ul class="m-0 ps-3">
+                <% resource.errors.full_messages.each do |msg| %>
+                  <li><%= msg %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <%= simple_form_for(resource,
+                              as: resource_name,
+                              url: registration_path(resource_name),
+                              html: { method: :put }) do |f| %>
+
+            <div class="mb-3">
+              <%= f.input :full_name,
+                          label: "Nome completo",
+                          input_html: { class: "form-control form-control-lg soft-input", disabled: true } %>
+              <small class="text-secondary">Campo não editável.</small>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :trade_name,
+                          label: "Nome fantasia",
+                          input_html: { class: "form-control form-control-lg soft-input", disabled: true } %>
+              <small class="text-secondary">Campo não editável.</small>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :cnpj,
+                          label: "CNPJ",
+                          input_html: { class: "form-control form-control-lg soft-input", disabled: true } %>
+              <small class="text-secondary">Campo não editável.</small>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :email,
+                          label: "E-mail",
+                          input_html: { class: "form-control form-control-lg soft-input", disabled: true } %>
+              <small class="text-secondary">Campo não editável.</small>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mb-3">
+              <%= f.input :whatsapp,
+                          label: "WhatsApp",
+                          input_html: { class: "form-control form-control-lg soft-input", autocomplete: "tel" } %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :password,
+                          label: "Nova senha (opcional)",
+                          hint: "Deixe em branco para manter a atual.",
+                          input_html: { class: "form-control form-control-lg soft-input", autocomplete: "new-password" } %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :password_confirmation,
+                          label: "Confirme a nova senha",
+                          input_html: { class: "form-control form-control-lg soft-input", autocomplete: "new-password" } %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :current_password,
+                          label: "Senha atual",
+                          hint: "Obrigatória para salvar alterações.",
+                          input_html: { class: "form-control form-control-lg soft-input", autocomplete: "current-password" } %>
+            </div>
+
+            <div class="d-grid mt-2">
+              <%= f.button :submit, "Salvar alterações", class: "btn btn-primary btn-lg rounded-pill fw-semibold" %>
+            </div>
+          <% end %>
+
+          <div class="text-center mt-3">
+            <%= link_to "Voltar ao dashboard", authenticated_root_path, class: "small fw-semibold text-decoration-none link-primary-soft" %>
+          </div>
+        </div>
+
+        <p class="text-center text-light mt-3 small">© <%= Time.current.year %> — Resumo Livre</p>
+      </div>
+    </div>
+  </div>
+</div>

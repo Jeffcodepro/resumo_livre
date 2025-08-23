@@ -1,0 +1,32 @@
+<nav class="platform-bar">
+  <div class="container-fluid platform-container">
+    <ul class="platform-list">
+      <!-- Shein (ativa) -->
+      <li class="platform-item">
+        <%= link_to "#", class: "platform-link active", aria: { label: "SHEIN" } do %>
+          <%= image_tag "Shein_logoBRANCA.png", alt: "SHEIN", class: "platform-logo" %>
+        <% end %>
+      </li>
+
+      <!-- Mercado Livre (desabilitada / em desenvolvimento) -->
+      <li class="platform-item">
+        <%= link_to "#",
+                    class: "platform-link is-disabled",
+                    data: { tooltip: "Em desenvolvimento" },
+                    onclick: "event.preventDefault();" do %>
+          <%= image_tag "MercadoLivre_logoBRANCA.png", alt: "Mercado Livre", class: "platform-logo" %>
+        <% end %>
+      </li>
+
+      <!-- Shopee (desabilitada / em desenvolvimento) -->
+      <li class="platform-item">
+        <%= link_to "#",
+                    class: "platform-link is-disabled",
+                    data: { tooltip: "Em desenvolvimento" },
+                    onclick: "event.preventDefault();" do %>
+          <%= image_tag "Shopee_logoBRANCA.png", alt: "Shopee", class: "platform-logo" %>
+        <% end %>
+      </li>
+    </ul>
+  </div>
+</nav>

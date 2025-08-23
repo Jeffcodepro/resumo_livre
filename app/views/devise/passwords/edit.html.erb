@@ -1,0 +1,53 @@
+<div class="auth-bg">
+  <div class="container">
+    <div class="row min-vh-100 align-items-center justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+
+        <div class="auth-card shadow-lg">
+          <div class="text-center mb-4">
+            <h1 class="h4 mb-1">Definir nova senha</h1>
+            <p class="text-muted m-0">Crie uma senha forte e fácil de lembrar</p>
+          </div>
+
+          <% if resource.errors.any? %>
+            <div class="alert alert-danger mb-4">
+              <ul class="m-0 ps-3">
+                <% resource.errors.full_messages.each do |msg| %>
+                  <li><%= msg %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
+            <%= f.input :reset_password_token, as: :hidden %>
+
+            <div class="mb-3">
+              <%= f.input :password,
+                          label: "Nova senha",
+                          required: true,
+                          input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.input :password_confirmation,
+                          label: "Confirme a nova senha",
+                          required: true,
+                          input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
+            </div>
+
+            <div class="d-grid">
+              <%= f.button :submit, "Atualizar senha", class: "btn btn-primary btn-lg auth-btn fw-semibold rounded-pill" %>
+            </div>
+          <% end %>
+
+          <div class="text-center mt-3">
+            <%= link_to "Voltar ao login", new_session_path(resource_name), class: "small text-decoration-none link-muted" %>
+          </div>
+        </div>
+
+        <p class="text-center text-light mt-3 small">© <%= Time.current.year %> — Resumo Livre</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,14 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <p class="notice"><%= notice %></p>
-    <p class="alert"><%= alert %></p>
+    <!---<p class="notice"><%= notice %></p>
+    <p class="alert"><%= alert %></p>-->
     <%= yield %>
+    <% if flash[:swal].present? %>
+      <script>
+        (function(){
+          var msg = "<%= j flash[:swal] %>";
+          if (!msg) return;
+          if (window.Swal) {
+            Swal.fire({ icon: 'warning', title: 'Atenção', text: msg });
+          } else {
+            alert(msg);
+          }
+        })();
+      </script>
+    <% end %>
   </body>
 </html>

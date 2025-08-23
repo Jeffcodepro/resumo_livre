@@ -1,0 +1,244 @@
+/* =========================
+   DARK NEON ORANGE THEME
+   Fundo preto + laranja neon
+   ========================= */
+
+/* --- Paleta base (compat + aliases) --- */
+:root {
+  /* Primária (laranja neon) — ajuste o HEX se tiver o oficial */
+  --primary:           #FF7A1A; /* neon base */
+  --primary-600:       #FF6A00; /* hover */
+  --primary-700:       #E75C00; /* active/press */
+  --primary-100:       rgba(255, 122, 26, 0.16); /* soft fill */
+
+  /* Aliases p/ compatibilidade com variáveis antigas */
+  --brand-primary:     var(--primary);
+  --brand-primary-600: var(--primary-600);
+  --brand-primary-700: var(--primary-700);
+  --brand-primary-100: var(--primary-100);
+
+  /* Texto em dark */
+  --text-100: #F3F4F6;
+  --text-200: #E5E7EB;
+  --text-400: #9CA3AF;
+  --text-500: #6B7280;
+
+  /* Linhas / vidros */
+  --line:         rgba(255,255,255,0.14);
+  --glass:        rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+
+  /* Feedback */
+  --error:     #DD1E73;
+  --error-200: #FF84BE;
+  --success:   #10b981;
+
+  /* Sombra geral */
+  --shadow-soft:  0 12px 30px rgba(0,0,0,0.55);
+  --shadow-hover: 0 16px 42px rgba(0,0,0,0.65);
+}
+
+/* ======== FUNDO PRETO + GLOW LARANJA ======== */
+/* Use <div class="auth-bg"> como wrapper da página */
+.auth-bg,
+.auth-light {
+  min-height: 100vh;
+  background-color:  linear-gradient(160deg, #000 0%, #737775 100%); /* base sólida preta */
+
+  /* Radiais de brilho laranja + textura sutil em diagonal */
+  background-image:
+    radial-gradient( 600px 300px at 15% 5%,  rgba(255,122,26,0.14), transparent 60%),
+    radial-gradient( 500px 250px at 85% 0%,  rgba(255,106,0, 0.12),  transparent 60%),
+    radial-gradient( 700px 350px at 10% 100%, rgba(231,92,0, 0.10),  transparent 60%),
+    linear-gradient(160deg, #0A0A0A 0%, #0F0F0F 35%, #111 60%, #0B0B0B 100%);
+}
+
+/* ======== CARD DE AUTENTICAÇÃO (GLASS) ======== */
+.auth-card,
+.auth-card-light {
+  backdrop-filter: blur(12px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid var(--glass-border);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  color: var(--text-200);
+  width: 100%;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02) inset,
+    var(--shadow-soft);
+}
+
+.auth-card:hover,
+.auth-card-light:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.auth-card h1,
+.auth-card-light h1 { color: var(--text-100); }
+
+.auth-card .text-muted,
+.auth-card-light .text-muted { color: var(--text-400) !important; }
+
+/* ======== MARCA/LOGO COM GLOW NEON ======== */
+.brand-circle,
+.brand-mark {
+  width: 78px; height: 78px;
+  border-radius: 18px;
+  display: inline-grid; place-items: center;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255,122,26, .18), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  color: #0B0B0B;
+  font-size: 1.25rem;
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.22),
+    0 8px 26px rgba(255,122,26, 0.22),
+    0 0 32px rgba(255,122,26, 0.24) inset;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.brand-mark:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.28),
+    0 12px 36px rgba(255,122,26, 0.30),
+    0 0 40px rgba(255,122,26, 0.30) inset;
+}
+/* se usar <%= image_tag "logo.png", class: "brand-logo" %> */
+.brand-logo { max-width: 72%; max-height: 72%; object-fit: contain; }
+
+/* ======== INPUTS (form-control / soft-input) ======== */
+.auth-card .form-control,
+.auth-card-light .form-control,
+.soft-input {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--line) !important;
+  color: var(--text-100);
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+  transition: all .15s ease;
+}
+.auth-card .form-control::placeholder,
+.auth-card-light .form-control::placeholder,
+.soft-input::placeholder { color: var(--text-500); }
+
+.auth-card .form-control:focus,
+.auth-card-light .form-control:focus,
+.soft-input:focus {
+  background: rgba(255,255,255,0.10);
+  border-color: var(--primary) !important;
+  box-shadow:
+    0 0 0 0.2rem rgba(255,122,26, .22),
+    0 0 22px rgba(255,122,26, .24);
+  outline: none;
+}
+
+/* Erros (simple_form/BS) */
+.auth-card .form-control.is-invalid,
+.auth-card-light .form-control.is-invalid,
+.soft-input.is-invalid {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 0.2rem rgba(221,30,115,.25);
+}
+.invalid-feedback,
+#error_explanation { color: var(--error-200); font-size: .875rem; }
+
+/* ======== CHECKBOX ======== */
+.auth-card .form-check-input,
+.auth-card-light .form-check-input {
+  background-color: transparent;
+  border-color: rgba(255,255,255,0.5);
+}
+.auth-card .form-check-input:checked,
+.auth-card-light .form-check-input:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 .15rem rgba(255,122,26,.25);
+}
+
+/* ======== BOTÕES ======== */
+.auth-btn,
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-600));
+  border: none;
+  color: #0B0B0B;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.25) inset,
+    0 10px 26px rgba(255,122,26,.22);
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.auth-btn:hover,
+.btn-primary:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.30) inset,
+    0 14px 34px rgba(255,122,26,.28);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 0 1px rgba(255,122,26,.32) inset,
+    0 8px 20px rgba(255,122,26,.25);
+}
+
+.btn-outline-secondary {
+  border-color: #515452;
+  color: var(--text-200);
+  border-radius: 999px;
+}
+.btn-outline-secondary:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+/* ======== LINKS ======== */
+a.link-muted { color: var(--text-400); }
+a.link-muted:hover { color: var(--text-100); }
+a.link-primary-soft { color: var(--primary); }
+a.link-primary-soft:hover { color: var(--primary-600); text-decoration: underline; }
+
+/* ======== DIVISOR “OU” ======== */
+.auth-divider {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 1.25rem 0;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.auth-divider span { color: var(--text-400); font-size: 0.9rem; }
+
+/* ======== ALERTS (vidro + neon) ======== */
+.alert {
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+}
+.alert-success {
+  background: rgba(16,185,129,0.18);
+  color: #9BFEC3;
+  border: 1px solid rgba(16,185,129,0.35);
+}
+.alert-danger {
+  background: rgba(221,30,115,0.16);
+  color: var(--error-200);
+  border: 1px solid rgba(221,30,115,0.35);
+}
+
+/* ======== RESPONSIVIDADE ======== */
+@media (max-width: 380px) {
+  .brand-circle, .brand-mark { width: 60px; height: 60px; font-size: 1rem; }
+  .auth-card, .auth-card-light { padding: 1.5rem; }
+}
