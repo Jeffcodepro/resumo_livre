@@ -14,6 +14,10 @@ class User < ApplicationRecord
   # Não permitir troca real de e-mail
   validate :email_unchanged, on: :update
 
+  has_many :orders,   dependent: :destroy, inverse_of: :user
+  has_many :payments, dependent: :destroy, inverse_of: :user
+
+
   # ---- métodos públicos ----
   def first_name
     n = full_name.to_s.strip
