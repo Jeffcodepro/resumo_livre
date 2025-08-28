@@ -33,9 +33,12 @@ services:
       - ./storage:/rails/storage
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.resumo-livre.rule=Host(`resumo-livre-resumo-livre.ld8jgk.easypanel.host`)"
+      - "traefik.http.routers.resumo-livre.rule=Host(`resumo-livre-resumo-livre>
       - "traefik.http.routers.resumo-livre.entrypoints=http,https"
       - "traefik.http.services.resumo-livre.loadbalancer.server.port=3001"
+      - "traefik.http.routers.resumo-livre.tls.certresolver=letsencrypt"
+    networks:
+      - easypanel
 
 volumes:
   pgdata:
