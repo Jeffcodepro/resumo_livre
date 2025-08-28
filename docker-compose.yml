@@ -8,6 +8,29 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGR>
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - easypanel
+
+  web:
+
+
+root@srv909268:~/resumo_livre# cat  docker-compose.yml
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-resumo_livre_production}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-resumo_livre_production}"]
       interval: 5s
       timeout: 5s
@@ -27,7 +50,7 @@ services:
       RAILS_SERVE_STATIC_FILES: ${RAILS_SERVE_STATIC_FILES:-1}
       RAILS_LOG_TO_STDOUT: ${RAILS_LOG_TO_STDOUT:-1}
     ports:
-      - "3001:3001" # Porta interna para Traefik
+      - "3001:3001"
     command: >
       bash -lc "bin/rails db:prepare &&
                 bin/rails server -b 0.0.0.0 -p 3001"
@@ -35,7 +58,7 @@ services:
       - ./storage:/rails/storage
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.resumo-livre.rule=Host(`resumo-livre-resumo-livre>
+      - "traefik.http.routers.resumo-livre.rule=Host(`resumo-livre-resumo-livre.ld8jgk.easypanel.host`)"
       - "traefik.http.routers.resumo-livre.entrypoints=http,https"
       - "traefik.http.services.resumo-livre.loadbalancer.server.port=3001"
       - "traefik.http.routers.resumo-livre.tls.certresolver=letsencrypt"
@@ -44,7 +67,7 @@ services:
 
 volumes:
   pgdata:
-  
+
 networks:
   easypanel:
     external: true
