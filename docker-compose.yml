@@ -17,6 +17,7 @@ services:
 
   web:
     build: .
+    mem_limit: 2g
     depends_on:
       db:
         condition: service_healthy
