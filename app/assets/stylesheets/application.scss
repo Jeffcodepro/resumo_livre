@@ -11,27 +11,72 @@
 @import "components/index";
 @import "pages/index";
 
-.page-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.35);
-  backdrop-filter: blur(2px);
+/* Botão com spinner inline */
+.btn.has-spinner {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;              /* espaço entre ícone e texto */
+}
+
+/* spinner começa oculto */
+.btn.has-spinner .btn-spinner {
   display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
 }
 
-.page-overlay .box {
-  background: #111;
-  color: #fff;
-  padding: 14px 18px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.4);
-  display: flex;
-  align-items: center;
+/* quando estiver carregando, mostra o spinner */
+.btn.has-spinner[aria-busy="true"] .btn-spinner,
+.btn.has-spinner.disabled .btn-spinner,
+.btn.has-spinner.is-loading .btn-spinner {
+  display: inline-block;
 }
 
-.is-loading .page-overlay {
-  display: flex;
+/* evita cliques duplos */
+.btn.has-spinner[aria-busy="true"],
+.btn.has-spinner.disabled,
+.btn.has-spinner.is-loading {
+  pointer-events: none;
 }
+
+/* opcional: suaviza o texto quando carregando */
+.btn.has-spinner[aria-busy="true"] .btn-label,
+.btn.has-spinner.disabled .btn-label,
+.btn.has-spinner.is-loading .btn-label {
+  opacity: .85;
+}
+
+/* variante: substitui o texto pelo spinner centralizado */
+.btn.has-spinner.replace .btn-label { visibility: hidden; }
+.btn.has-spinner.replace[aria-busy="true"] .btn-spinner {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ajuste fino do ícone FA */
+.btn .fa-spinner { vertical-align: -0.125em; }
+/* app/assets/stylesheets/application.css (ou .scss) */
+
+/* Botões com spinner inline */
+.btn.has-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+/* spinner começa oculto */
+.btn.has-spinner .btn-spinner { display: none; }
+
+/* quando estiver carregando, mostra o spinner */
+.btn.has-spinner[aria-busy="true"] .btn-spinner,
+.btn.has-spinner.disabled .btn-spinner,
+.btn.has-spinner.is-loading .btn-spinner { display: inline-block; }
+
+/* travar clique enquanto carrega */
+.btn.has-spinner[aria-busy="true"],
+.btn.has-spinner.disabled,
+.btn.has-spinner.is-loading { pointer-events: none; }
+
+/* ajuste fino */
+.btn .fa-spinner { vertical-align: -0.125em; }
+

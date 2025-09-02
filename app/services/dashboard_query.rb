@@ -1,6 +1,10 @@
-# app/services/dashboard_query.rb
+# frozen_string_literal: true
+
 class DashboardQuery
   Result = Struct.new(:summary, :rows, keyword_init: true)
+
+  MIN_OVERDUE_DAYS = 90
+  TOP_LIMIT        = 10
 
   def self.run(user:)
     orders_rel   = user.orders
@@ -23,64 +27,85 @@ class DashboardQuery
                       .where("value_total > 0")
                       .where.not(order_number: paid_nums)
 
-    # Precisamos do item_id e do value_total para dedup
-    pending_rows = pending_scope.select(:order_number, :order_date, :value_total, :status, :platform, :item_id)
+    # Precisamos de collected_at (apenas ele conta para idade) e demais campos
+    pending_rows = pending_scope.select(
+      :order_number, :order_date, :collected_at, :value_total, :status, :platform, :item_id,
+      :product_number, :variation, :seller_sku, :shein_sku, :skc, :inventory_id,
+      :tracking_code, :first_mile_waybill
+    )
 
-    # --------- DEDUP POR ITEM (contagem por ITEM pendente) ---------
-    # Regra:
-    # - Se item_id presente: 1 por (order_number, item_id)
-    # - Se item_id ausente: 1 por (order_number, valor_total) — evita duplicar linhas idênticas sem ID
+    # --------- DEDUPE POR ITEM (contagem por ITEM pendente) ---------
     grouped_by_order = pending_rows.group_by { |o| o.order_number.to_s.strip }
 
-    today = (Time.zone || Time).now.to_date
-
-    # Coleção deduplicada de "itens pendentes"
     dedup_items = []
-
     grouped_by_order.each do |num, arr|
-      with_id     = arr.reject { |o| o.item_id.to_s.strip.empty? }
-      without_id  = arr.select { |o| o.item_id.to_s.strip.empty? }
+      with_id    = arr.reject { |o| o.item_id.to_s.strip.empty? }
+      without_id = arr.select { |o| o.item_id.to_s.strip.empty? }
 
       dedup_with_id = with_id
                         .group_by { |o| o.item_id.to_s.strip }
                         .values
-                        .map { |items| items.first }
+                        .map(&:first)
 
+      # Evitar colapsar itens distintos sem item_id: usa preço + vários identificadores
       dedup_without_id = without_id
-                           .group_by { |o| [num, format('%.2f', o.value_total.to_f)] } # agrupa por valor quando não tem item_id
+                           .group_by do |o|
+                             [
+                               num,
+                               format('%.2f', o.value_total.to_f),
+                               o.product_number.to_s.strip,
+                               o.variation.to_s.strip,
+                               o.seller_sku.to_s.strip,
+                               o.shein_sku.to_s.strip,
+                               o.skc.to_s.strip,
+                               o.inventory_id.to_s.strip,
+                               o.tracking_code.to_s.strip,
+                               o.first_mile_waybill.to_s.strip
+                             ]
+                           end
                            .values
-                           .map { |items| items.first }
+                           .map(&:first)
 
       dedup_items.concat(dedup_with_id + dedup_without_id)
     end
 
-    # KPIs de pendência (AGORA por ITEM pendente)
+    # KPIs de pendência (por ITEM pendente) — NÃO mexemos aqui
     pedidos_pendentes = dedup_items.size
     valor_pendente    = dedup_items.sum { |o| o.value_total.to_f }.round(2)
 
-    # Linhas da tabela continuam agregadas por pedido (para UX): soma valores, menor data
-    rows_by_order = dedup_items.group_by { |o| o.order_number.to_s.strip }.map do |num, arr|
-      order_date = arr.map(&:order_date).compact.min
-      valor      = arr.sum { |o| o.value_total.to_f }.round(2)
-      status     = arr.first&.status
-      platform   = arr.first&.platform.presence || "SHEIN"
-      dias       = order_date ? (today - order_date.to_date).to_i : 0
+    # --------- TABELA (apenas collected_at) ---------
+    today = (Time.zone || Time).today
 
-      {
-        "numero_pedido"  => num,
-        "plataforma"     => platform,
-        "valor"          => valor,
-        "dias_vencidos"  => dias,
-        "status"         => status,
-        "pendente"       => true,
-        "valor_pendente" => valor
-      }
-    end
+    # Monta linhas por pedido **somente** se existir pelo menos um collected_at
+    rows_by_order = dedup_items
+      .group_by { |o| o.order_number.to_s.strip }
+      .filter_map do |num, arr|
+        cols = arr.map(&:collected_at).compact
+        next nil if cols.empty?                      # ignora pedidos sem collected_at
 
+        base_date = cols.min                         # só collected_at
+        dias      = (today - base_date.to_date).to_i
+
+        valor     = arr.sum { |o| o.value_total.to_f }.round(2)
+        status    = arr.first&.status
+        platform  = arr.first&.platform.presence || "SHEIN"
+
+        {
+          "numero_pedido"  => num,
+          "plataforma"     => platform,
+          "valor"          => valor,
+          "dias_vencidos"  => dias,
+          "status"         => status,
+          "pendente"       => true,
+          "valor_pendente" => valor
+        }
+      end
+
+    # Top 10 com >= 90 dias
     rows = rows_by_order
-             .select { |r| r["dias_vencidos"] > 90 }
-             .sort_by { |r| [-r["dias_vencidos"], -r["valor_pendente"]] }
-             .first(10)
+             .select { |r| r["dias_vencidos"].to_i >= MIN_OVERDUE_DAYS }
+             .sort_by { |r| [-r["dias_vencidos"].to_i, -r["valor_pendente"].to_f] }
+             .first(TOP_LIMIT)
 
     swal_warning = nil
     if orders_rel.exists? && paid_nums.empty?
@@ -90,7 +115,7 @@ class DashboardQuery
     summary = {
       total_pedidos:     total_pedidos,
       valor_faturado:    valor_faturado,
-      pedidos_pendentes: pedidos_pendentes, # agora “itens pendentes”
+      pedidos_pendentes: pedidos_pendentes, # itens pendentes
       valor_pendente:    valor_pendente,
       swal_warning:      swal_warning
     }

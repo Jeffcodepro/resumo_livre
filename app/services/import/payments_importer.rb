@@ -1,4 +1,5 @@
-# app/services/import/payments_importer.rb
+# frozen_string_literal: true
+
 module Import
   class PaymentsImporter
     require "roo"
@@ -29,7 +30,7 @@ module Import
       paid_at_key   = find_key(headers, "data de pagamento", "data", "pago em")
       value_key     = find_key(headers, "valor a receber", "valor recebido", "valor pago")
 
-      # Campos extras do payments
+      # Campos extras
       site_key                 = find_key(headers, "site")
       related_order_key        = find_key(headers, "número de pedido relacionado", "numero de pedido relacionado")
       invoice_number_key       = find_key(headers, "número de fatura", "numero de fatura")
@@ -75,33 +76,32 @@ module Import
         end
 
         to_insert << {
-          user_id:                   user.id,
-          order_number:              num,
-          platform:                  "SHEIN",
-          amount:                    row["__amount__"],                      # positivo
-          paid_at:                   parse_time(row[paid_at_key]),
-          site:                      row[site_key],
-          related_order_number:      row[related_order_key],
-          invoice_number:            row[invoice_number_key],
-          seller_delivery_date:      parse_date(row[seller_delivery_date_key]),
-          delivered_at:              parse_time(row[delivered_at_key]),
-          invoice_type:              row[invoice_type_key],
-          product_price_summary:     to_d(row[product_price_sum_key]),
-          campaign_discount:         to_d(row[campaign_discount_key]),
-          store_coupon_value:        to_d(row[store_coupon_value_key]),
-          payment_commission:        to_d(row[payment_commission_key]),
+          user_id:                    user.id,
+          order_number:               num,
+          platform:                   "SHEIN",
+          amount:                     row["__amount__"],                      # positivo
+          paid_at:                    parse_time(row[paid_at_key]),
+          site:                       row[site_key],
+          related_order_number:       row[related_order_key],
+          invoice_number:             row[invoice_number_key],
+          seller_delivery_date:       parse_date(row[seller_delivery_date_key]),
+          delivered_at:               parse_time(row[delivered_at_key]),
+          invoice_type:               row[invoice_type_key],
+          product_price_summary:      to_d(row[product_price_sum_key]),
+          campaign_discount:          to_d(row[campaign_discount_key]),
+          store_coupon_value:         to_d(row[store_coupon_value_key]),
+          payment_commission:         to_d(row[payment_commission_key]),
           freight_intermediation_fee: to_d(row[freight_fee_key]),
           storage_operation_fee:      to_d(row[storage_fee_key]),
           return_processing_fee:      to_d(row[return_fee_key]),
-          raw:                       row.except("__amount__"),
-          created_at:                Time.current,
-          updated_at:                Time.current
+          raw:                        row.except("__amount__"),
+          created_at:                 Time.current,
+          updated_at:                 Time.current
         }
       end
 
       ActiveRecord::Base.transaction do
         Payment.insert_all(to_insert) if to_insert.any?
-        # se houver pagamentos <= 0 antigos e já existe um positivo para o mesmo pedido, remove-os
         cleanup_negatives_when_positive_exists(user)
       end
 
@@ -162,14 +162,99 @@ module Import
       0.to_d
     end
 
+    # ---------- PARSERS DE DATA/HORA (PT-BR ROBUSTO) ----------
     def self.parse_time(value)
-      return nil if value.nil?
-      Time.parse(value.to_s) rescue nil
+      parse_time_br(value)
     end
 
     def self.parse_date(value)
-      return nil if value.nil?
-      Date.parse(value.to_s) rescue nil
+      d = parse_date_br(value)
+      d&.to_date
+    end
+
+    def self.parse_time_br(value)
+      return nil if value.nil? || (value.respond_to?(:blank?) && value.blank?)
+
+      zone = Time.zone || ActiveSupport::TimeZone['America/Sao_Paulo']
+
+      case value
+      when Time
+        return zone.at(value)
+      when DateTime
+        return zone.local(value.year, value.month, value.day, value.hour, value.min, value.sec)
+      when Date
+        return zone.local(value.year, value.month, value.day, 0, 0, 0)
+      when Numeric
+        base = Date.new(1899, 12, 30)
+        days = value.floor
+        frac = value - days
+        date = base + days
+        secs = (frac * 86_400).round
+        h = secs / 3600
+        m = (secs % 3600) / 60
+        s = secs % 60
+        return zone.local(date.year, date.month, date.day, h, m, s)
+      else
+        s = value.to_s.strip
+        return nil if s.empty?
+        if (dt = parse_time_from_pt_string(s, zone))
+          return dt
+        end
+        Time.parse(s) rescue nil
+      end
+    end
+
+    def self.parse_date_br(value)
+      t = parse_time_br(value)
+      t&.to_date
+    end
+
+    def self.parse_time_from_pt_string(str, zone)
+      s = ActiveSupport::Inflector.transliterate(str).downcase.strip
+
+      months = {
+        "janeiro"=>1, "fevereiro"=>2, "marco"=>3, "abril"=>4, "maio"=>5, "junho"=>6, "julho"=>7, "agosto"=>8,
+        "setembro"=>9, "outubro"=>10, "novembro"=>11, "dezembro"=>12,
+        "jan"=>1, "fev"=>2, "mar"=>3, "abr"=>4, "mai"=>5, "jun"=>6, "jul"=>7, "ago"=>8,
+        "set"=>9, "out"=>10, "nov"=>11, "dez"=>12
+      }
+
+      # 1) "dd [de] <mes> [de] yyyy [hh:mm[:ss]]"
+      if s =~ /\A\s*(\d{1,2})\s*(?:de\s*)?([a-z]{3,9})\s*(?:de\s*)?(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s*\z/
+        d  = $1.to_i
+        mn = $2
+        y  = $3.to_i
+        hh = ($4 || "0").to_i
+        mm = ($5 || "0").to_i
+        ss = ($6 || "0").to_i
+        m  = months[mn]
+        return zone.local(y, m, d, hh, mm, ss) if m
+      end
+
+      # 2) "dd/mm/yyyy [hh:mm[:ss]]" ou "dd-mm-yyyy ..."
+      if s =~ /\A\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s*\z/
+        d  = $1.to_i
+        m  = $2.to_i
+        y  = $3.to_i
+        y += 2000 if y < 100
+        hh = ($4 || "0").to_i
+        mm = ($5 || "0").to_i
+        ss = ($6 || "0").to_i
+        return zone.local(y, m, d, hh, mm, ss)
+      end
+
+      # 3) "yyyy-mm-dd[ hh:mm[:ss]]"
+      if s =~ /\A\s*(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s*\z/
+        y  = $1.to_i
+        m  = $2.to_i
+        d  = $3.to_i
+        hh = ($4 || "0").to_i
+        mm = ($5 || "0").to_i
+        ss = ($6 || "0").to_i
+        return zone.local(y, m, d, hh, mm, ss)
+      end
+
+      nil
     end
   end
 end
