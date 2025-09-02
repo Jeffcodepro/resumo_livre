@@ -7,7 +7,6 @@ class DashboardsController < ApplicationController
     @rows    ||= []
   end
 
-  # Upload aceita um ou dois arquivos; valida e acusa arquivos trocados
   STRICT_UPLOAD_SLOTS = true
 
   def upload
@@ -23,7 +22,7 @@ class DashboardsController < ApplicationController
     errors   = []
 
     files.each do |slot, uploaded|
-      kind = detect_file_kind(uploaded) # :orders, :payments, :ambiguous, :unknown
+      kind = detect_file_kind(uploaded)
 
       case kind
       when :orders
@@ -44,12 +43,11 @@ class DashboardsController < ApplicationController
 
       when :ambiguous
         errors << "Arquivo em **#{slot_label(slot)}** é ambíguo (contém colunas de Pedidos e Pagamentos). Não importado."
-      else # :unknown
+      else
         errors << "Arquivo em **#{slot_label(slot)}** não possui os cabeçalhos esperados. Não importado."
       end
     end
 
-    # IMPORTANTE: não calcula/responde com KPIs aqui.
     flash[:swal] = ([*messages, *errors].join("\n")) if messages.any? || errors.any?
     redirect_to dashboards_path
   rescue => e
@@ -64,6 +62,24 @@ class DashboardsController < ApplicationController
     render :index
   end
 
+  # === Exporta PENDENTES exatamente como o dashboard: POR ITEM por padrão, com corte ≥90 dias ===
+  def export_pdf
+    group = params[:group].to_s == "order" ? :order : :item
+
+    result = PendingRowsQuery.run(user: current_user, group_by: group)
+    pdf    = PendingReport.new(user: current_user, result: result, title: "Relatório de Pendências", by_item: (group == :item)).render
+
+    suffix   = group == :item ? "por-item" : "por-pedido"
+    filename = "pendentes-#{suffix}-#{(Time.zone || Time).today.strftime('%Y-%m-%d')}.pdf"
+
+    send_data pdf,
+              filename: filename,
+              type: "application/pdf",
+              disposition: "attachment"
+  rescue => e
+    Rails.logger.error("[export_pdf] #{e.class} - #{e.message}\n#{e.backtrace.take(5).join("\n")}")
+    redirect_to dashboards_path, alert: "Falha ao gerar PDF: #{e.message}"
+  end
   private
 
   def detect_file_kind(uploaded)

@@ -1,0 +1,33 @@
+<div class="flash-stack">
+  <% flash.each do |kind, msg| %>
+    <% next if msg.blank? %>
+    <% bs_class =
+        case kind.to_s
+        when "notice" then "alert-success"
+        when "alert"  then "alert-warning"
+        when "error"  then "alert-danger"
+        else               "alert-info"
+        end %>
+
+    <div class="alert <%= bs_class %> shadow-sm mb-2 d-flex align-items-start"
+         role="alert"
+         data-controller="flash"
+         data-flash-timeout-value="5000"> <!-- ms -->
+      <div class="me-2 pt-1">
+        <%# ícone opcional com FA %>
+        <i class="fa-solid <%= { "alert" => "fa-triangle-exclamation",
+                                 "error" => "fa-circle-xmark",
+                                 "notice" => "fa-circle-check" }[kind.to_s] || "fa-circle-info" %>"></i>
+      </div>
+      <div class="flex-grow-1">
+        <%= msg.html_safe %>
+      </div>
+      <button type="button"
+        class="btn-close ms-3"
+        aria-label="Fechar"
+        data-action="flash#close">
+      </button>
+
+    </div>
+  <% end %>
+</div>

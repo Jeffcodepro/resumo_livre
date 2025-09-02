@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Import
   class OrdersImporter
     require "roo"
@@ -21,15 +23,15 @@ module Import
       end
 
       # Chaves principais
-      number_key = find_key(headers, "número do pedido", "numero do pedido", "pedido", "order number")
-      status_key = find_key(headers, "status do pedido", "status")
-      date_key   = find_key(headers, "data e hora de criação do pedido", "data do pedido", "data de criação", "criação")
-      value_key  = headers.reverse.find { |h| h.to_s.strip != "" } || headers.last
+      number_key  = find_key(headers, "número do pedido", "numero do pedido", "pedido", "order number")
+      status_key  = find_key(headers, "status do pedido", "status")
+      date_key    = find_key(headers, "coletado em", "coletado") # (usado pra order_date)
+      value_key   = headers.reverse.find { |h| h.to_s.strip != "" } || headers.last
       item_id_key = find_key(headers, "id do item")
 
       raise "Coluna 'Número do pedido' não encontrada." if number_key.nil?
 
-      # Extras (mesmos nomes que você adicionou na tabela)
+      # Extras
       order_type_key              = find_key(headers, "tipo de pedido")
       exchange_order_number_key   = find_key(headers, "pedido de troca")
       shipping_mode_key           = find_key(headers, "modo de envio")
@@ -67,7 +69,7 @@ module Import
       # Carrega linhas da planilha
       rows = (HEADER_ROW_INDEX + 1..sheet.last_row).map { |i| headers.zip(sheet.row(i)).to_h }
 
-      # Filtra válidas: número presente e NÃO “reembolsado por cliente”
+      # Filtra válidas
       valid = rows.select do |row|
         num = row[number_key].to_s.strip
         next false if num.blank?
@@ -75,13 +77,9 @@ module Import
       end
 
       # --- DEDUP INSERÇÃO POR ITEM ---
-      # - se item_id presente: 1 por (order_number, item_id)
-      # - se item_id ausente: 1 por order_number (conservador)
-      seen_items_by_order = Hash.new { |h, k| h[k] = Set.new }   # order_number => Set[item_id]
-      seen_no_id_orders   = Set.new                              # pedidos sem item_id já inseridos
+      seen_items_by_order = Hash.new { |h, k| h[k] = Set.new } # order_number => Set[item_id]
+      seen_no_id_orders   = Set.new
 
-      # Evita reprocessar já existentes do usuário (pela regra do índice atual)
-      # Para item_id presente, usamos o índice composto; para ausente, evitamos repetir 1x por pedido
       existing_pairs = Order.where(user_id: user.id)
                             .pluck(:order_number, :item_id)
                             .map { |num, iid| [num.to_s.strip, iid.to_s.strip.presence] }
@@ -95,17 +93,14 @@ module Import
         iid    = row[item_id_key].to_s.strip
         has_id = !iid.empty?
 
-        # Regras de dedupe na importação
         if has_id
           pair = [num, iid]
-          # se já vimos nesse arquivo ou já existe no banco, pula
           if seen_items_by_order[num].include?(iid) || existing_pairs.include?(pair)
             skipped << num
             next
           end
           seen_items_by_order[num] << iid
         else
-          # sem item_id -> apenas um por pedido (conservador)
           if seen_no_id_orders.include?(num) || existing_pairs.include?([num, nil])
             skipped << num
             next
@@ -123,7 +118,7 @@ module Import
           status:                    row[status_key].to_s,
           order_date:                order_date,
           value_total:               value,
-          line_count:                1,               # 1 por item/linha
+          line_count:                1,
           order_type:                presence(row[order_type_key]),
           exchange_order_number:     presence(row[exchange_order_number_key]),
           shipping_mode:             presence(row[shipping_mode_key]),
@@ -235,9 +230,100 @@ module Import
       0.to_d
     end
 
+    # ---------- PARSERS DE DATA/HORA (PT-BR ROBUSTO) ----------
     def self.parse_time(value)
-      return nil if value.nil?
-      Time.parse(value.to_s) rescue nil
+      parse_time_br(value)
+    end
+
+    def self.parse_date(value)
+      d = parse_date_br(value)
+      d&.to_date
+    end
+
+    def self.parse_time_br(value)
+      return nil if value.nil? || (value.respond_to?(:blank?) && value.blank?)
+
+      zone = Time.zone || ActiveSupport::TimeZone['America/Sao_Paulo']
+
+      case value
+      when Time
+        return zone.at(value)
+      when DateTime
+        return zone.local(value.year, value.month, value.day, value.hour, value.min, value.sec)
+      when Date
+        return zone.local(value.year, value.month, value.day, 0, 0, 0)
+      when Numeric
+        # Excel serial date/time (a partir de 1899-12-30)
+        base = Date.new(1899, 12, 30)
+        days = value.floor
+        frac = value - days
+        date = base + days
+        secs = (frac * 86_400).round
+        h = secs / 3600
+        m = (secs % 3600) / 60
+        s = secs % 60
+        return zone.local(date.year, date.month, date.day, h, m, s)
+      else
+        s = value.to_s.strip
+        return nil if s.empty?
+        if (dt = parse_time_from_pt_string(s, zone))
+          return dt
+        end
+        Time.parse(s) rescue nil
+      end
+    end
+
+    def self.parse_date_br(value)
+      t = parse_time_br(value)
+      t&.to_date
+    end
+
+    def self.parse_time_from_pt_string(str, zone)
+      s = ActiveSupport::Inflector.transliterate(str).downcase.strip
+
+      months = {
+        "janeiro"=>1, "fevereiro"=>2, "marco"=>3, "abril"=>4, "maio"=>5, "junho"=>6, "julho"=>7, "agosto"=>8,
+        "setembro"=>9, "outubro"=>10, "novembro"=>11, "dezembro"=>12,
+        "jan"=>1, "fev"=>2, "mar"=>3, "abr"=>4, "mai"=>5, "jun"=>6, "jul"=>7, "ago"=>8,
+        "set"=>9, "out"=>10, "nov"=>11, "dez"=>12
+      }
+
+      # 1) "dd [de] <mes> [de] yyyy [hh:mm[:ss]]"
+      if s =~ /\A\s*(\d{1,2})\s*(?:de\s*)?([a-z]{3,9})\s*(?:de\s*)?(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s*\z/
+        d  = $1.to_i
+        mn = $2
+        y  = $3.to_i
+        hh = ($4 || "0").to_i
+        mm = ($5 || "0").to_i
+        ss = ($6 || "0").to_i
+        m  = months[mn]
+        return zone.local(y, m, d, hh, mm, ss) if m
+      end
+
+      # 2) "dd/mm/yyyy [hh:mm[:ss]]" ou "dd-mm-yyyy ..."
+      if s =~ /\A\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s*\z/
+        d  = $1.to_i
+        m  = $2.to_i
+        y  = $3.to_i
+        y += 2000 if y < 100
+        hh = ($4 || "0").to_i
+        mm = ($5 || "0").to_i
+        ss = ($6 || "0").to_i
+        return zone.local(y, m, d, hh, mm, ss)
+      end
+
+      # 3) "yyyy-mm-dd[ hh:mm[:ss]]"
+      if s =~ /\A\s*(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?\s*\z/
+        y  = $1.to_i
+        m  = $2.to_i
+        d  = $3.to_i
+        hh = ($4 || "0").to_i
+        mm = ($5 || "0").to_i
+        ss = ($6 || "0").to_i
+        return zone.local(y, m, d, hh, mm, ss)
+      end
+
+      nil
     end
 
     def self.refunded?(status)

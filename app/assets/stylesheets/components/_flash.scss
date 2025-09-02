@@ -1,0 +1,53 @@
+.flash-stack {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+
+  /* Em vez de: width: min(440px, calc(100vw - 2rem)); */
+  width: calc(100vw - 2rem);
+  max-width: 440px;
+
+  z-index: 1080;
+}
+.flash-stack .alert .btn {
+  line-height: 1;
+  border-radius: .5rem;
+}
+.flash-stack .alert .btn i {
+  font-size: 0.95rem;
+}
+
+.flash-stack .flash-close {
+  position: relative;
+  width: 28px; height: 28px;
+  border: 0; background: #fff; /* botão pílula branco, igual ao print */
+  color: #111; border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; margin-left: .5rem;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08) inset;
+  cursor: pointer; opacity: .9; transition: opacity .15s ease;
+}
+.flash-stack .flash-close:hover,
+.flash-stack .flash-close:focus { opacity: 1; }
+
+/* Desenha o X */
+.flash-stack .flash-close::before,
+.flash-stack .flash-close::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 12px; height: 2px; background: currentColor;
+  transform-origin: center;
+}
+.flash-stack .flash-close::before { transform: translate(-50%, -50%) rotate(45deg); }
+.flash-stack .flash-close::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* Acessibilidade: mantém o texto escondido para leitores de tela */
+.flash-stack .flash-close .visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+
+@keyframes flashFadeOut {
+  to { opacity: 0; transform: translateY(-6px); }
+}
+.flash-fade-out { animation: flashFadeOut .28s ease forwards; }

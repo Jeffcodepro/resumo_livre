@@ -6,33 +6,24 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <!---<p class="notice"><%= notice %></p>
-    <p class="alert"><%= alert %></p>-->
-    <%= yield %>
     <% if flash[:swal].present? %>
       <script>
         (function(){
           var msg = "<%= j flash[:swal] %>";
-          if (!msg) return;
-          if (window.Swal) {
-            Swal.fire({ icon: 'warning', title: 'Atenção', text: msg });
-          } else {
-            alert(msg);
-          }
+          if (msg && window.Swal) { Swal.fire({ icon:'warning', title:'Atenção', text: msg }); }
         })();
       </script>
+    <% else %>
+      <%= render "shared/messages", show_devise_links: false %>
     <% end %>
-    <div class="page-overlay" aria-hidden="true">
-      <div class="box">
-        <div class="spinner-border" role="status" aria-label="Carregando…"></div>
-        <span class="ms-2">Processando…</span>
-      </div>
-    </div>
+    <%= yield %>
   </body>
 </html>

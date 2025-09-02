@@ -9,7 +9,16 @@ Rails.application.routes.draw do
   post "dashboards/upload",       to: "dashboards#upload",       as: :dashboards_upload
   post "dashboards/load_from_db", to: "dashboards#load_from_db", as: :dashboards_load_from_db
   # (opcional futuro)
-  # get  "dashboards/export_pdf",   to: "dashboards#export_pdf",   as: :dashboards_export_pdf
+  get  "dashboards/export_pdf",   to: "dashboards#export_pdf",   as: :dashboards_export_pdf
+
+  # config/routes.rb
+  resources :dashboards, only: [:index] do
+    collection do
+      get :load_from_db
+      get :export_pdf
+      post :upload
+    end
+  end
 
   # Roots
   authenticated :user do

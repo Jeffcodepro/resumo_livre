@@ -3,16 +3,7 @@
     <div class="row min-vh-100 align-items-center justify-content-center">
       <div class="col-12 col-md-8 col-lg-5">
         <!-- Flash de erros/sucesso do Devise -->
-        <% if notice.present? || alert.present? %>
-          <div class="mb-3">
-            <% if notice.present? %>
-              <div class="alert alert-success rounded-3"><%= notice %></div>
-            <% end %>
-            <% if alert.present? %>
-              <div class="alert alert-danger rounded-3"><%= alert %></div>
-            <% end %>
-          </div>
-        <% end %>
+
 
         <div class="auth-card shadow-lg">
           <!-- Branding -->

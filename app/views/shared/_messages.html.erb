@@ -1,0 +1,75 @@
+<%# locals: show_devise_links: false %>
+<% show_links = local_assigns.fetch(:show_devise_links, false) %>
+
+<div class="flash-stack">
+  <% flash.each do |kind, msg| %>
+    <% next if msg.blank? || kind.to_s == "swal" %>
+    <% bs_class =
+      case kind.to_s
+      when "notice" then "alert-success"
+      when "alert"  then "alert-warning"
+      when "error"  then "alert-danger"
+      else               "alert-info"
+      end %>
+
+    <div class="alert <%= bs_class %> shadow-sm mb-2 d-flex align-items-start"
+         role="alert"
+         data-controller="flash"
+         data-flash-timeout-value="5000">
+      <div class="me-2 pt-1">
+        <i class="fa-solid <%= { "alert" => "fa-triangle-exclamation",
+                                 "error" => "fa-circle-xmark",
+                                 "notice" => "fa-circle-check" }[kind.to_s] || "fa-circle-info" %>"></i>
+      </div>
+      <div class="flex-grow-1"><%= msg.respond_to?(:html_safe) ? msg.html_safe : msg %></div>
+      <button type="button"
+        class="flash-close ms-3"
+        aria-label="Fechar"
+        data-action="flash#close">
+        <span class="visually-hidden">Fechar</span>
+      </button>
+    </div>
+  <% end %>
+
+  <% if defined?(resource) && resource.respond_to?(:errors) && resource.errors.any? %>
+    <div class="alert alert-danger shadow-sm mb-2"
+         role="alert"
+         data-controller="flash"
+         data-flash-timeout-value="8000">
+      <strong>
+        <%= t("errors.messages.not_saved",
+              count: resource.errors.count,
+              resource: resource.class.model_name.human.downcase) %>
+      </strong>
+      <ul class="mb-0 mt-2">
+        <% resource.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>
+
+<% if show_links && defined?(devise_mapping) && devise_mapping %>
+  <div class="mt-3 small text-muted">
+    <% if controller_name != 'sessions' %>
+      <%= link_to "Entrar", new_session_path(resource_name) %><br>
+    <% end %>
+
+    <% if devise_mapping.registerable? && controller_name != 'registrations' %>
+      <%= link_to "Criar conta", new_registration_path(resource_name) %><br>
+    <% end %>
+
+    <% if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+      <%= link_to "Esqueceu sua senha?", new_password_path(resource_name) %><br>
+    <% end %>
+
+    <% if devise_mapping.confirmable? && controller_name != 'confirmations' %>
+      <%= link_to "Não recebeu instruções de confirmação?", new_confirmation_path(resource_name) %><br>
+    <% end %>
+
+    <% if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
+      <%= link_to "Não recebeu instruções de desbloqueio?", new_unlock_path(resource_name) %><br>
+    <% end %>
+  </div>
+<% end %>
