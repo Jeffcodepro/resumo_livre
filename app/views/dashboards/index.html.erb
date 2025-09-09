@@ -18,18 +18,23 @@
             <input
               type="file"
               id="orders_file"
-              name="orders_file"
+              name="orders_file[]"
+              multiple
               accept=".xlsx,.xls,.csv"
               class="visually-hidden"
-              onchange="const f=this.files[0]; const el=document.getElementById('orders_file_name'); if(el){ el.textContent=f?f.name:'Nenhum arquivo selecionado'; this.labels[0]?.classList.toggle('has-file', !!f); }"
+              onchange="(function(input){
+                const files = Array.from(input.files || []);
+                const el = document.getElementById('orders_file_name');
+                if (el) el.textContent = files.length
+                  ? (files.length === 1 ? files[0].name : `${files.length} arquivos selecionados`)
+                  : 'Nenhum arquivo selecionado';
+                input.labels && input.labels[0] && input.labels[0].classList.toggle('has-file', files.length > 0);
+              })(this)"
             />
 
             <label for="orders_file" class="upload-tile" data-drop-for="orders_file">
               <div class="icon">
-                <%= image_tag "PedidosICON.svg",
-                              alt: "Pedidos",
-                              class: "icon-img",
-                              width: 28, height: 28 %>
+                <%= image_tag "PedidosICON.svg", alt: "Pedidos", class: "icon-img", width: 28, height: 28 %>
               </div>
               <div class="texts">
                 <div class="title">Pedidos (.xlsx/.csv)</div>
@@ -46,17 +51,22 @@
             <input
               type="file"
               id="invoices_file"
-              name="invoices_file"
+              name="invoices_file[]"
+              multiple
               accept=".xlsx,.xls,.csv"
               class="visually-hidden"
-              onchange="const f=this.files[0]; const el=document.getElementById('invoices_file_name'); if(el){ el.textContent=f?f.name:'Nenhum arquivo selecionado'; this.labels[0]?.classList.toggle('has-file', !!f); }"
+              onchange="(function(input){
+                const files = Array.from(input.files || []);
+                const el = document.getElementById('invoices_file_name');
+                if (el) el.textContent = files.length
+                  ? (files.length === 1 ? files[0].name : `${files.length} arquivos selecionados`)
+                  : 'Nenhum arquivo selecionado';
+                input.labels && input.labels[0] && input.labels[0].classList.toggle('has-file', files.length > 0);
+              })(this)"
             />
             <label for="invoices_file" class="upload-tile" data-drop-for="invoices_file">
               <div class="icon">
-                <%= image_tag "PagamentoICON.svg",
-                              alt: "Pagamentos",
-                              class: "icon-img",
-                              width: 28, height: 28 %>
+                <%= image_tag "PagamentoICON.svg", alt: "Pagamentos", class: "icon-img", width: 28, height: 28 %>
               </div>
               <div class="texts">
                 <div class="title">Faturas/Pagamentos (.xlsx/.csv)</div>
@@ -66,7 +76,6 @@
             </label>
           </div>
         </div>
-      </div>
 
     <div class="mt-3 d-flex justify-content-between">
       <%= button_tag type: "submit",
@@ -88,8 +97,6 @@
       <i class="fa-solid fa-spinner fa-spin btn-spinner" aria-hidden="true"></i>
       <span class="btn-label">Verificar Pendentes</span>
     <% end %>
-
-
     </div>
 
     <% if @summary.present? %>

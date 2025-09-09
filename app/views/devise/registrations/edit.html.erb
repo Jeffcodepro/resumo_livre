@@ -10,16 +10,6 @@
             <p class="text-secondary m-0">Atualize seus dados</p>
           </div>
 
-          <% if resource.errors.any? %>
-            <div class="alert alert-danger mb-4">
-              <ul class="m-0 ps-3">
-                <% resource.errors.full_messages.each do |msg| %>
-                  <li><%= msg %></li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
-
           <%= simple_form_for(resource,
                               as: resource_name,
                               url: registration_path(resource_name),

@@ -86,7 +86,7 @@ class PendingReport
   # ----------------- Tabela -----------------
   def build_table(pdf)
     if @rows.empty?
-      pdf.text "Sem pendências com o filtro atual (≥ 90 dias).", size: 11, style: :italic
+      pdf.text "Sem pendências com o filtro atual.", size: 11, style: :italic
       return
     end
 
