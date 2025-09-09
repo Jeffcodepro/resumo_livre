@@ -2,32 +2,12 @@
   <div class="container">
     <div class="row min-vh-100 align-items-center justify-content-center">
       <div class="col-12 col-sm-10 col-md-8 col-lg-5">
-        <% if notice.present? || alert.present? %>
-          <div class="mb-3">
-            <% if notice.present? %>
-              <div class="alert alert-success"><%= notice %></div>
-            <% end %>
-            <% if alert.present? %>
-              <div class="alert alert-danger"><%= alert %></div>
-            <% end %>
-          </div>
-        <% end %>
 
         <div class="card auth-card-light border-0 shadow-sm rounded-4 p-4 p-md-5">
           <div class="text-center mb-4">
             <h1 class="h4 mb-1 fw-semibold">Criar conta</h1>
             <p class="text-secondary m-0">Leva menos de 1 minuto</p>
           </div>
-
-          <% if resource.errors.any? %>
-            <div class="alert alert-danger mb-4">
-              <ul class="m-0 ps-3">
-                <% resource.errors.full_messages.each do |msg| %>
-                  <li><%= msg %></li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
 
           <%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
             <div class="mb-3">

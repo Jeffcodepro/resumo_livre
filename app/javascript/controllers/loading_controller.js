@@ -1,24 +1,50 @@
+// app/javascript/controllers/loading_controller.js
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { fallback: { type: Number, default: 15000 } } // ms
 
   connect() {
-    this._onFocus = () => this.resetAll()
-    window.addEventListener("focus", this._onFocus, { passive: true })
+    this._busy = new Set()
+
+    // Em qualquer navegação/render Turbo bem-sucedida, garantimos que tudo fique "idle"
+    this._onTurboDone = () => this.resetAll()
+    document.addEventListener("turbo:load", this._onTurboDone, { passive: true })
+    document.addEventListener("turbo:frame-load", this._onTurboDone, { passive: true })
+    document.addEventListener("turbo:before-render", this._onTurboDone, { passive: true })
+    document.addEventListener("turbo:before-cache", this._onTurboDone, { passive: true })
+
+    // Reanima animações quando a aba volta a ficar visível
+    this._onVisibility = () => { if (document.visibilityState === "visible") this.kickAllSpinners() }
+    document.addEventListener("visibilitychange", this._onVisibility, { passive: true })
   }
+
   disconnect() {
-    window.removeEventListener("focus", this._onFocus)
+    document.removeEventListener("turbo:load", this._onTurboDone)
+    document.removeEventListener("turbo:frame-load", this._onTurboDone)
+    document.removeEventListener("turbo:before-render", this._onTurboDone)
+    document.removeEventListener("turbo:before-cache", this._onTurboDone)
+    document.removeEventListener("visibilitychange", this._onVisibility)
   }
 
   // ---- Eventos Turbo (mesma aba) ----
   turboSubmitStart(e) {
-    const submitter = e.detail?.formSubmission?.submitter
-    if (submitter) this.setBusy(submitter)
+    const submitter = e?.detail?.formSubmission?.submitter || this.guessSubmitter(e?.target)
+    if (submitter) {
+      this.markNewTabIfNeeded(submitter)
+      this.setBusy(submitter)
+    }
   }
+
   turboSubmitEnd(e) {
-    const submitter = e.detail?.formSubmission?.submitter
-    if (submitter && !this.isNewTab(submitter)) this.setIdle(submitter)
+    const submitter = e?.detail?.formSubmission?.submitter || this.guessSubmitter(e?.target)
+    // Independente de sucesso/erro/redirect, desligamos.
+    if (submitter) {
+      this.setIdle(submitter)
+    } else {
+      // Sem referência? Desliga todos para não sobrar spinner preso.
+      this.resetAll()
+    }
   }
 
   // ---- Compat: nomes antigos/segundo controller ----
@@ -27,46 +53,62 @@ export default class extends Controller {
 
   // ---- Eventos padrão ----
   submit(e) {
-    const submitter = e.submitter
-    if (submitter) this.setBusy(submitter)
+    const el = e.submitter || this.guessSubmitter(e.currentTarget || e.target)
+    if (el) {
+      this.markNewTabIfNeeded(el)
+      this.setBusy(el)
+    }
   }
+
   click(e) {
     const el = e.currentTarget
     this.setBusy(el)
-    if (this.isNewTab(el)) this.scheduleFallback(el)
+    this.markNewTabIfNeeded(el) // agenda fallback só se abrir nova aba
   }
 
   // ---- Helpers ----
   isNewTab(el) {
+    if (!el) return false
     if (el.tagName === "A") return el.target === "_blank"
     const form = el.form || el.closest("form")
     return form && form.getAttribute("target") === "_blank"
   }
-
-  messageFor(el) {
-    // prioridade: data-loading-text do acionador, senão "Aguarde…"
-    return el?.dataset?.loadingText || "Aguarde…"
+  isMarkedNewTab(el) { return el?.dataset?.newTab === "1" }
+  markNewTabIfNeeded(el) {
+    if (this.isNewTab(el)) {
+      el.dataset.newTab = "1"
+      this.scheduleFallback(el) // só nova aba
+    }
   }
+  guessSubmitter(from) {
+    const root = from instanceof Element ? from : document
+    return root?.querySelector?.('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])')
+  }
+  messageFor(el) { return el?.dataset?.loadingText || "Aguarde…" }
 
   setBusy(el) {
     if (!el) return
+    this._busy.add(el)
+
     el.setAttribute("aria-busy", "true")
-    el.classList.add("disabled")
+    el.classList.add("disabled", "has-spinner")
     el.disabled = true
 
     const msg = this.messageFor(el)
-    const label = el.querySelector(".btn-label")
-    const spinEl = el.querySelector(".btn-spinner")
+    const label  = el.querySelector(".btn-label")
+    let spinEl   = el.querySelector(".btn-spinner")
 
-    // MODO 1: já existe markup (.btn-spinner / .btn-label)
     if (spinEl || label) {
+      if (!spinEl && label) {
+        label.insertAdjacentHTML("afterbegin", `<i class="btn-spinner fa fa-spinner fa-spin me-2" aria-hidden="true"></i>`)
+        spinEl = el.querySelector(".btn-spinner")
+      }
       if (spinEl) spinEl.classList.add("fa-spinner", "fa-spin")
       if (label) {
         if (!label.dataset.originalText) label.dataset.originalText = label.textContent
         label.textContent = msg
       }
     } else {
-      // MODO 2: injetar conteúdo (estilo do seu segundo controller)
       if (el.tagName === "BUTTON") {
         if (!el.dataset.originalHtml) el.dataset.originalHtml = el.innerHTML
         if (el.dataset.spin !== "off") {
@@ -82,33 +124,52 @@ export default class extends Controller {
         el.value = msg
       }
     }
+    this.kickSpin(el)
   }
 
   setIdle(el) {
     if (!el) return
+    this._busy.delete(el)
+
     el.removeAttribute("aria-busy")
-    el.classList.remove("disabled")
+    el.classList.remove("disabled", "has-spinner")
     el.disabled = false
 
     const spinEl = el.querySelector(".btn-spinner")
-    const label = el.querySelector(".btn-label")
-
+    const label  = el.querySelector(".btn-label")
     if (spinEl) spinEl.classList.remove("fa-spinner", "fa-spin")
     if (label?.dataset.originalText) label.textContent = label.dataset.originalText
 
-    // se usamos MODO 2 (injeção), restaura:
-    if (el.dataset.originalHtml) { el.innerHTML = el.dataset.originalHtml; delete el.dataset.originalHtml }
-    if (el.dataset.originalValue) { el.value = el.dataset.originalValue; delete el.dataset.originalValue }
+    if (el.dataset.originalHtml)  { el.innerHTML = el.dataset.originalHtml; delete el.dataset.originalHtml }
+    if (el.dataset.originalValue) { el.value     = el.dataset.originalValue; delete el.dataset.originalValue }
 
     if (el._resetTimer) { clearTimeout(el._resetTimer); el._resetTimer = null }
-  }
-
-  scheduleFallback(el) {
-    if (el._resetTimer) clearTimeout(el._resetTimer)
-    el._resetTimer = setTimeout(() => this.setIdle(el), this.fallbackValue)
+    delete el.dataset.newTab
   }
 
   resetAll() {
-    document.querySelectorAll('.has-spinner[aria-busy="true"]').forEach((el) => this.setIdle(el))
+    // Desliga tudo que estiver marcado como ocupado
+    this._busy.forEach((el) => this.setIdle(el))
+    this._busy.clear()
+  }
+
+  kickSpin(el) {
+    const parts = el.querySelectorAll(".btn-spinner, .spinner-border")
+    parts.forEach((node) => {
+      if (node.classList.contains("fa-spin")) {
+        node.classList.remove("fa-spin"); void node.offsetWidth; node.classList.add("fa-spin")
+      } else if (node.classList.contains("spinner-border")) {
+        node.classList.remove("spinner-border"); void node.offsetWidth; node.classList.add("spinner-border")
+      }
+    })
+  }
+  kickAllSpinners() {
+    document.querySelectorAll('[aria-busy="true"]').forEach((el) => this.kickSpin(el))
+  }
+
+  scheduleFallback(el) {
+    if (!this.isMarkedNewTab(el)) return
+    if (el._resetTimer) clearTimeout(el._resetTimer)
+    el._resetTimer = setTimeout(() => this.setIdle(el), this.fallbackValue)
   }
 }
