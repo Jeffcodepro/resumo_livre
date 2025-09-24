@@ -4,6 +4,13 @@
       <div class="col-12 col-sm-10 col-md-8 col-lg-5">
 
         <div class="card auth-card-light border-0 shadow-sm rounded-4 p-4 p-md-5">
+          <%= link_to (user_signed_in? ? authenticated_root_path : unauthenticated_root_path),
+            class: "d-block mx-auto mb-4" do %>
+            <%= image_tag "Logo1.png",
+                  alt: "Resumo Livre",
+                  class: "rl-logo",
+                  loading: "lazy" %>
+          <% end %>
           <div class="text-center mb-4">
             <h1 class="h4 mb-1 fw-semibold">Criar conta</h1>
             <p class="text-secondary m-0">Leva menos de 1 minuto</p>

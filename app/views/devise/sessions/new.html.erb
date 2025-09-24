@@ -7,6 +7,15 @@
 
         <div class="auth-card shadow-lg">
           <!-- Branding -->
+        <%= link_to (user_signed_in? ? authenticated_root_path : unauthenticated_root_path),
+          class: "d-block mx-auto mb-4" do %>
+          <%= image_tag "Logo1.png",
+                alt: "Resumo Livre",
+                class: "rl-logo",
+                loading: "lazy" %>
+        <% end %>
+
+
           <div class="text-center mb-4">
             <h1 class="h4 mb-1">Bem-vindo de volta</h1>
             <p class="text-muted m-0">Faça login para continuar</p>

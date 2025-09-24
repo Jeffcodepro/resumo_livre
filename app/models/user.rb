@@ -46,7 +46,7 @@ class User < ApplicationRecord
   end
 
   def normalize_cnpj!
-    return if persisted? 
+    return if persisted?
     self.cnpj = only_digits(cnpj).presence
   end
 

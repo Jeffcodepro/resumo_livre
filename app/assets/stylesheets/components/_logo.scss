@@ -228,3 +228,38 @@
   .platform-list { gap: 22px; padding: 12px 10px; }
   .platform-logo { height: 26px; }
 }
+
+/* app/assets/stylesheets/rl_brand.scss */
+
+/* Wrapper só da área da logo */
+.rl-brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* A própria imagem da logo */
+.rl-logo {
+  display: block;
+  margin: 0 auto;               /* centraliza */
+  height: clamp(64px, 8vw, 112px);
+  width: auto;
+  max-width: none;               /* ignora img-fluid do Bootstrap */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* maior em telas grandes */
+@media (min-width: 992px) {
+  .rl-logo { height: 96px; }
+}
+
+/* variação opcional grandona */
+.rl-logo--lg { height: 120px; }
+
+/* --- Se o .auth-card tiver estilos fortes, “isola” aqui --- */
+.auth-card .rl-logo {
+  border: 0;
+  box-shadow: none;
+  filter: none;
+}
