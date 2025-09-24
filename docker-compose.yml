@@ -17,7 +17,6 @@ services:
 
   web:
     build: .
-    container_name: resumo-livre  
     mem_limit: 3g
     depends_on:
       db:
