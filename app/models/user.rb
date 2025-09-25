@@ -38,6 +38,9 @@ class User < ApplicationRecord
     email.to_s.split("@").first
   end
 
+  after_commit :notify_n8n_signup, on: :create
+
+
   private
 
   # ------------ Normalizações ------------
@@ -101,5 +104,9 @@ class User < ApplicationRecord
     sum = nums.each_with_index.sum { |n, i| n * weights[i] }
     mod = sum % 11
     mod < 2 ? 0 : (11 - mod)
+  end
+
+  def notify_n8n_signup
+    N8nUserSignupJob.perform_later(id)
   end
 end
