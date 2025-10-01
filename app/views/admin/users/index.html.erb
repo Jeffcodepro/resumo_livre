@@ -1,0 +1,125 @@
+<%# app/views/admin/users/index.html.erb %>
+<div class="admin-users">
+  <div class="page">
+    <h1>Controle de Acesso dos Clientes</h1>
+
+    <div class="panel">
+      <div class="toolbar">
+        <%= button_to "Aprovar TODOS os pendentes",
+              approve_all_pending_admin_users_path,
+              method: :post,
+              form: { data: { turbo_confirm: "Aprovar todos os usuários pendentes?" } },
+              class: "btn btn-primary" %>
+        <div class="spacer"></div>
+        <%= link_to "Recarregar", admin_users_path, class: "btn btn-outline-secondary" %>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="c-id">#</th>
+              <th class="c-name">Nome / Loja / E-mail</th>
+              <th class="c-contact">WhatsApp</th>
+              <th class="c-cnpj">CNPJ</th>
+              <th class="c-date">Criado em</th>
+              <th class="c-approved">Aprovado</th>
+              <th class="c-paid">Pago</th>
+              <th class="c-blocked">Bloqueado</th>
+              <th class="c-actions text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @users.each do |user| %>
+              <tr id="user_<%= user.id %>">
+                <td class="c-id"><small><%= user.id %></small></td>
+
+                <td class="c-name">
+                  <div class="name-primary"><%= user.full_name.presence || "-" %></div>
+                  <div class="name-secondary"><%= user.trade_name.presence || "—" %></div>
+                  <div class="ellipsis" title="<%= user.email %>"><small><%= user.email %></small></div>
+                </td>
+
+                <td class="c-contact">
+                  <small class="ellipsis" title="<%= user.whatsapp %>"><%= user.whatsapp.presence || "—" %></small>
+                </td>
+
+                <td class="c-cnpj">
+                  <small class="ellipsis" title="<%= user.cnpj %>"><%= user.cnpj.presence || "—" %></small>
+                </td>
+
+                <td class="c-date">
+                  <small><%= (defined?(l) ? l(user.created_at, format: :short) : user.created_at) rescue user.created_at %></small>
+                </td>
+
+                <td class="c-approved">
+                  <% if user.approved? %>
+                    <span class="chip chip--ok">Sim</span>
+                    <small class="subnote">
+                      <%= user.approved_at ? (defined?(l) ? l(user.approved_at, format: :short) : user.approved_at) : "-" %>
+                    </small>
+                  <% else %>
+                    <span class="chip">Não</span>
+                  <% end %>
+                </td>
+
+                <td class="c-paid">
+                  <% if user.paid? %>
+                    <span class="chip chip--ok">Sim</span>
+                  <% else %>
+                    <span class="chip chip--warn">Pendente</span>
+                  <% end %>
+                </td>
+
+                <td class="c-blocked">
+                  <% if user.blocked? %>
+                    <span class="chip chip--danger">Bloqueado</span>
+                  <% else %>
+                    <span class="chip chip--ok">Liberado</span>
+                  <% end %>
+                </td>
+
+                <td class="c-actions text-end">
+                  <div class="btn-group" role="group">
+                    <% unless user.approved? %>
+                      <%= button_to "Aprovar",
+                            approve_admin_user_path(user),
+                            method: :patch,
+                            form: { data: { turbo_confirm: "Aprovar #{user.email}?" } },
+                            class: "btn btn-outline-success btn-sm" %>
+                    <% end %>
+
+                    <% if user.paid? %>
+                      <%= button_to "Não pago",
+                            mark_unpaid_admin_user_path(user),
+                            method: :patch,
+                            class: "btn btn-outline-warning btn-sm" %>
+                    <% else %>
+                      <%= button_to "Marcar pago",
+                            mark_paid_admin_user_path(user),
+                            method: :patch,
+                            class: "btn btn-outline-success btn-sm" %>
+                    <% end %>
+
+                    <% if user.blocked? %>
+                      <%= button_to "Desbloquear",
+                            unblock_admin_user_path(user),
+                            method: :patch,
+                            class: "btn btn-outline-primary btn-sm" %>
+                    <% else %>
+                      <%= button_to "Bloquear",
+                            block_admin_user_path(user),
+                            method: :patch,
+                            form: { data: { turbo_confirm: "Bloquear #{user.email}? Ele perderá o acesso." } },
+                            class: "btn btn-outline-danger btn-sm" %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -30,4 +30,17 @@ Rails.application.routes.draw do
       root "devise/sessions#new", as: :unauthenticated_root
     end
   end
+
+  namespace :admin do
+    resources :users, only: [:index, :update] do
+      collection { post :approve_all_pending }
+      member do
+        patch :approve
+        patch :block
+        patch :unblock
+        patch :mark_paid
+        patch :mark_unpaid
+      end
+    end
+  end
 end

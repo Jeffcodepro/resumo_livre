@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_01_130103) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_30_224224) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -107,8 +107,17 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_01_130103) do
     t.string "trade_name"
     t.string "cnpj"
     t.string "whatsapp"
+    t.boolean "admin", default: false, null: false
+    t.boolean "approved", default: false, null: false
+    t.datetime "approved_at"
+    t.boolean "blocked", default: false, null: false
+    t.boolean "paid", default: false, null: false
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true
+    t.index ["admin"], name: "index_users_on_admin"
+    t.index ["approved"], name: "index_users_on_approved"
+    t.index ["blocked"], name: "index_users_on_blocked"
     t.index ["cnpj"], name: "index_users_on_cnpj", unique: true
+    t.index ["paid"], name: "index_users_on_paid"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 

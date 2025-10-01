@@ -26,9 +26,11 @@ class User < ApplicationRecord
     format:     { with: EMAIL_REGEX },
     uniqueness: { case_sensitive: false }
 
-  validates :cnpj,
-    presence:   true,
-    uniqueness: true
+  # ✅ manter assim
+  validates :cnpj, presence: true, unless: :admin?
+  validates :cnpj, uniqueness: { case_sensitive: false }, allow_nil: true
+  validate  :cnpj_must_be_valid, unless: :admin?   # (ou if: -> { cnpj.present? })
+
   validate :cnpj_must_be_valid
 
   # -------- Métodos públicos --------
@@ -39,6 +41,28 @@ class User < ApplicationRecord
   end
 
   after_commit :notify_n8n_signup, on: :create
+
+  def access_enabled?
+    approved? && paid? && !blocked?
+  end
+
+  # Se quiser impedir login de quem não está liberado:
+  def active_for_authentication?
+    super && (admin? || access_enabled?)
+  end
+
+  def inactive_message
+    return :blocked      if blocked?
+    return :not_approved unless approved?
+    return :unpaid       unless paid?
+    super
+  end
+
+  # ====== Scopes úteis ======
+  scope :pending_approval, -> { where(approved: false, blocked: false) }
+  scope :approved,         -> { where(approved: true) }
+  scope :blocked,          -> { where(blocked: true) }
+  scope :unpaid,           -> { where(paid: false) }
 
 
   private
