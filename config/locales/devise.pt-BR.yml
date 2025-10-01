@@ -14,6 +14,9 @@ pt-BR:
       timeout: "Sua sessão expirou, por favor, efetue login novamente para continuar."
       unauthenticated: "Para continuar, efetue login ou registre-se."
       unconfirmed: "Antes de continuar, confirme a sua conta."
+      blocked: "Sua conta está bloqueada."
+      not_approved: "Sua conta ainda não foi aprovada."
+      unpaid: "Seu pagamento está pendente."
     mailer:
       confirmation_instructions:
         subject: "Instruções de confirmação"
@@ -43,6 +46,13 @@ pt-BR:
       update_needs_confirmation: "Você atualizou a sua conta com sucesso, mas o seu novo endereço de e-mail precisa ser confirmado. Por favor, acesse-o e clique no link de confirmação que enviamos."
       updated: "Sua conta foi atualizada com sucesso."
       updated_but_not_signed_in: "Sua conta foi atualizada com sucesso. Como sua senha mudou, você precisa refazer o login."
+      signed_up_but_inactive: "Seu acesso está pendente de aprovação. Em breve, um de nossos colaboradores entrará em contato para desbloquear o acesso."
+      # usado quando inactive_message == :not_approved
+      signed_up_but_not_approved: "Seu acesso está pendente de aprovação. Em breve, um de nossos colaboradores entrará em contato para desbloquear o acesso."
+      # (opcionais, caso você use estes estados no futuro)
+      signed_up_but_unpaid: "Seu acesso está pendente de pagamento. Em breve entraremos em contato para concluir a liberação."
+      signed_up_but_blocked: "Sua conta está bloqueada. Entre em contato com o suporte para regularização."
+      # mantém também o genérico, se quiser
     sessions:
       signed_in: "Login efetuado com sucesso!"
       signed_out: "Saiu com sucesso."
