@@ -40,7 +40,6 @@ services:
       - "traefik.http.services.resumo-livre.loadbalancer.server.port=3001"
       - "traefik.http.services.resumo-livre.loadbalancer.server.scheme=http"
       - "traefik.http.routers.resumo-livre.tls.certresolver=letsencrypt"
-
     networks:
       - easypanel
 
@@ -50,3 +49,4 @@ volumes:
 networks:
   easypanel:
     external: true
+
