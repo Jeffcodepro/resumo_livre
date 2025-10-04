@@ -43,6 +43,7 @@ services:
     networks:
       - easypanel
 
+
 volumes:
   pgdata:
 
