@@ -14,7 +14,7 @@ ENV RAILS_ENV="production" \
     BUNDLE_WITHOUT="development"
 
 
-# Throw-away build stage to reduce size of final image
+# Build stage to reduce size of final image
 FROM base AS build
 
 # Install packages needed to build gems
@@ -40,7 +40,7 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 # Final stage for app image
 FROM base
 
-# Install packages needed for deployment
+# Install packages needed for runtime
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libvips postgresql-client && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -49,15 +49,15 @@ RUN apt-get update -qq && \
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /rails /rails
 
-# Run and own only the runtime files as a non-root user for security
+# Create a non-root user and adjust permissions
 RUN useradd rails --create-home --shell /bin/bash && \
     chown -R rails:rails db log storage tmp
 
 USER rails:rails
+WORKDIR /rails
 
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-
-# Start the server by default, this can be overwritten at runtime
+# Expose the Rails port
 EXPOSE 3001
-CMD ["./bin/rails", "server"]
+
+# Entrypoint: run migrations and then start server
+CMD ["bash", "-lc", "bin/rails db:migrate && bin/rails server -b 0.0.0.0 -p 3001"]
