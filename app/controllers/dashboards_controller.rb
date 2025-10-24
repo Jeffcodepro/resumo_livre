@@ -1,7 +1,7 @@
 # app/controllers/dashboards_controller.rb
 class DashboardsController < ApplicationController
   before_action :authenticate_user!
-
+  require "csv"
   def index
     @summary ||= { total_pedidos: 0, valor_faturado: 0, pedidos_pendentes: 0, valor_pendente: 0 }
     @rows    ||= []
@@ -131,7 +131,56 @@ class DashboardsController < ApplicationController
     redirect_to dashboards_path, alert: "Falha ao gerar PDF: #{e.message}"
   end
 
+  def export_xls
+    platform = resolved_platform
+    group    = params[:group].to_s == "order" ? :order : :item
+
+    result =
+      if platform == "shopee"
+        ShopeeDashboardQuery.run(user: current_user)
+      else
+        PendingRowsQuery.run(user: current_user, group_by: group)
+      end
+
+    rows = (result.respond_to?(:rows) ? result.rows : []) || []
+
+    headers = ["Número do pedido", "Plataforma", "Valor", "Dias vencidos", "Status"]
+
+    # CSV com ; como separador (bom para pt-BR) e valores com vírgula decimal.
+    csv_str = CSV.generate(col_sep: ";", force_quotes: true) do |csv|
+      csv << headers
+      rows.each do |r|
+        valor = (r["valor"] || r["valor_pendente"] || 0).to_f
+        csv << [
+          r["numero_pedido"],
+          r["plataforma"],
+          ("%.2f" % valor).tr(".", ","), # vírgula decimal
+          r["dias_vencidos"].to_i,
+          r["status"]
+        ]
+      end
+    end
+
+    filename = "pendentes-#{(Time.zone || Time).today.strftime('%Y-%m-%d')}.csv"
+
+    send_data csv_str.encode("UTF-8"),
+              filename: filename,
+              type: "text/csv; charset=UTF-8",
+              disposition: "attachment"
+  rescue => e
+    Rails.logger.error("[export_xls] #{e.class} - #{e.message}\n#{e.backtrace.take(5).join("\n")}")
+    redirect_to dashboards_path(platform: platform), alert: "Falha ao gerar CSV: #{e.message}"
+  end
+
   private
+
+  def resolved_platform
+    if respond_to?(:current_platform, true)
+      current_platform
+    else
+      params[:platform].presence || session[:platform].presence || "shein"
+    end
+  end
 
   def detect_file_kind(uploaded)
     headers = SpreadsheetParser.headers_from(uploaded, header_row_index: 2) rescue []
