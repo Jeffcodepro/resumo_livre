@@ -26,9 +26,13 @@ module Import
       number_key  = find_key(headers, "número do pedido", "numero do pedido", "pedido", "order number")
       status_key  = find_key(headers, "status do pedido", "status")
       date_key    = find_key(headers, "coletado em", "coletado") # (usado pra order_date)
-      value_key   = headers.reverse.find { |h| h.to_s.strip != "" } || headers.last
-      item_id_key = find_key(headers, "id do item")
 
+      # ==== Coluna de VALOR (robusta contra mudanças nas últimas colunas)
+      rows = (HEADER_ROW_INDEX + 1..sheet.last_row).map { |i| headers.zip(sheet.row(i)).to_h }
+      value_key = detect_value_header(headers, rows)
+      raise "Não foi possível identificar a coluna de valor em Pedidos" if value_key.nil?
+
+      item_id_key = find_key(headers, "id do item")
       raise "Coluna 'Número do pedido' não encontrada." if number_key.nil?
 
       # Extras
@@ -65,9 +69,6 @@ module Import
       coupon_value_key            = find_key(headers, "valor do cupom")
       store_campaign_discount_key = find_key(headers, "desconto de campanha da loja")
       commission_key              = find_key(headers, "comissão", "comissao")
-
-      # Carrega linhas da planilha
-      rows = (HEADER_ROW_INDEX + 1..sheet.last_row).map { |i| headers.zip(sheet.row(i)).to_h }
 
       # Filtra válidas
       valid = rows.select do |row|
@@ -328,6 +329,66 @@ module Import
 
     def self.refunded?(status)
       norm(status).include?("reembolsado por cliente")
+    end
+
+    # =========================
+    # NOVO: detecção robusta do header de valor
+    # =========================
+    def self.detect_value_header(headers, data_rows)
+      # 1) por nome (sinônimos prováveis)
+      by_name = find_key(
+        headers,
+        "Receita estimada de mercadorias",
+        "Receita estimada de mercadorias (R$)",
+        "Receita de mercadorias",
+        "Valor total",
+        "Total do pedido",
+        "Valor do pedido",
+        "Estimated merchandise revenue",
+        "Merchandise revenue",
+        "Order total"
+      )
+      return by_name if by_name
+
+      # 2) ignora SEMPRE as duas últimas não vazias
+      non_empty = headers.select { |h| h.to_s.strip != "" }
+      # casos pequenos (degenerados)
+      return non_empty.last if non_empty.size <= 1
+      return non_empty[-3]  if non_empty.size == 3
+
+      # remove as duas últimas
+      candidates = non_empty.size >= 4 ? non_empty[0..-3] : non_empty
+
+      # 3) heurística: olhar até 6 últimas candidatas (sem as duas finais)
+      slice  = candidates.last([candidates.size, 6].min)
+      sample = data_rows.first(250)
+
+      best_hdr  = nil
+      best_numc = -1
+      best_sum  = BigDecimal("0")
+
+      slice.each do |hdr|
+        values = sample.map { |r| r[hdr] }
+        numc   = values.count { |v| numeric_like?(v) }
+        sum    = values.reduce(0.to_d) { |acc, v| acc + to_d(v) }
+
+        if (numc > best_numc) || (numc == best_numc && sum > best_sum)
+          best_hdr  = hdr
+          best_numc = numc
+          best_sum  = sum
+        end
+      end
+
+      return best_hdr if best_hdr.present? && best_sum > 0
+
+      # 4) fallback final: antepenúltima não vazia
+      non_empty.size >= 3 ? non_empty[-3] : non_empty.last
+    end
+
+    def self.numeric_like?(v)
+      return true if v.is_a?(Numeric)
+      s = v.to_s.strip
+      s.match?(/\A-?\d+(?:[.,]\d+)?\z/)
     end
   end
 end
