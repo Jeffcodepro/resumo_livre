@@ -94,15 +94,14 @@ class SpreadsheetParser
     rows = (header_row_index + 1..sheet.last_row).map { |i| sheet.row(i) }
     data = rows.map { |r| headers.zip(r).to_h }
 
-    # no seu arquivo, o valor total é a ÚLTIMA coluna
-    last_header = headers.reverse.find { |h| h.to_s.strip != "" } || headers.last
+    value_key = detect_value_header_orders(headers, data)
 
     {
       rows: data,
       number_key:     find_key(headers, "número do pedido", "numero do pedido", "pedido", "order number"),
       status_key:     find_key(headers, "status do pedido", "status"),
       created_at_key: find_key(headers, "data e hora de criação do pedido", "data do pedido", "data de criação", "criação"),
-      value_key:      last_header # SOMAR esta coluna (última)
+      value_key:      value_key # coluna de valor detectada de forma robusta
     }
   end
 
@@ -128,7 +127,7 @@ class SpreadsheetParser
     o_num  = orders_df[:number_key] or raise "Coluna 'Número do pedido' não encontrada em Pedidos"
     o_stat = orders_df[:status_key]
     o_date = orders_df[:created_at_key]
-    o_val  = orders_df[:value_key]
+    o_val  = orders_df[:value_key]  or raise "Não foi possível identificar a coluna de valor em Pedidos"
 
     # 1) Filtrar pedidos não reembolsados (linha a linha)
     valid_rows = orders_df[:rows].select do |row|
@@ -296,5 +295,67 @@ class SpreadsheetParser
     errors << "O arquivo de **Faturas** parece ambíguo (contém também coluna de pedidos)."  if i[:kind] == :ambiguous
 
     { ok: ok, orders: o, invoices: i, errors: errors }
+  end
+
+  # =========================
+  # NOVO: detecção robusta da coluna de valor para PEDIDOS
+  # =========================
+  def self.detect_value_header_orders(headers, data_rows)
+    # 1) por nome (sinônimos prováveis)
+    by_name = find_key(
+      headers,
+      "Receita estimada de mercadorias",
+      "Receita estimada de mercadorias (R$)",
+      "Receita de mercadorias",
+      "Valor total",
+      "Total global",
+      "Total do pedido",
+      "Valor do pedido",
+      "Estimated merchandise revenue",
+      "Merchandise revenue",
+      "Order total"
+    )
+    return by_name if by_name
+
+    # 2) ignorar SEMPRE as duas últimas colunas não vazias (novas colunas no final)
+    non_empty = headers.select { |h| h.to_s.strip != "" }
+    return non_empty.last if non_empty.size <= 1
+
+    base = if non_empty.size >= 3
+      non_empty[0..-3] # remove as duas últimas
+    else
+      non_empty
+    end
+
+    # 3) heurística nas últimas candidatas do "base": olhar até 6
+    candidates = base.last([base.size, 6].min)
+    sample     = Array(data_rows).first(250)
+
+    best_hdr  = nil
+    best_numc = -1
+    best_sum  = 0.to_d
+
+    candidates.each do |hdr|
+      values = sample.map { |r| r[hdr] }
+      numc   = values.count { |v| numeric_like?(v) }
+      sum    = values.reduce(0.to_d) { |acc, v| acc + to_d(v) }
+
+      if (numc > best_numc) || (numc == best_numc && sum > best_sum)
+        best_hdr  = hdr
+        best_numc = numc
+        best_sum  = sum
+      end
+    end
+
+    return best_hdr if best_hdr.present? && best_sum > 0
+
+    # 4) fallback: antepenúltima (3ª a partir do fim) — que é “2 antes da penúltima dupla”
+    non_empty.size >= 3 ? non_empty[-3] : non_empty.last
+  end
+
+  def self.numeric_like?(v)
+    return true if v.is_a?(Numeric)
+    s = v.to_s.strip
+    s.match?(/\A-?\d+(?:[.,]\d+)?\z/)
   end
 end
